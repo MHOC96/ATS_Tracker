@@ -1,0 +1,29 @@
+import type { PublicJob } from "@/lib/jobs/queries";
+import { JobPublicView } from "@/components/jobs/job-public-view";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+type JobPublicPreviewProps = {
+  job: PublicJob;
+  isDraft?: boolean;
+};
+
+export function JobPublicPreview({ job, isDraft = false }: JobPublicPreviewProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-mono text-lg font-normal">
+          Public preview
+        </CardTitle>
+        {isDraft && (
+          <p className="text-sm text-muted-foreground">
+            This is how candidates will see the role after publish. Scoring and
+            internal fields are never shown publicly.
+          </p>
+        )}
+      </CardHeader>
+      <CardContent className="rounded-md border border-dashed border-border p-4">
+        <JobPublicView job={job} />
+      </CardContent>
+    </Card>
+  );
+}
