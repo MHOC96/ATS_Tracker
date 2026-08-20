@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { JobManageActions } from "@/components/jobs/job-manage-actions";
 import { JobPublicPreview } from "@/components/jobs/job-public-preview";
 import { PublishJobButton } from "@/components/jobs/publish-job-button";
 import { UploadCvForm } from "@/components/jobs/upload-cv-form";
@@ -37,6 +38,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   const canUpload = user.role !== "REVIEWER" && job.status === "PUBLISHED";
   const canPublish = user.role === "ADMIN" && job.status === "DRAFT";
+  const canEdit = user.role === "ADMIN" && job.status !== "ARCHIVED";
+  const canManage = user.role === "ADMIN" && job.status !== "ARCHIVED";
   const showPublicPreview = job.status === "DRAFT" || job.status === "PUBLISHED";
 
   const publicJob = {
@@ -65,6 +68,15 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       </div>
 
       {canPublish && <PublishJobButton jobId={job.id} />}
+
+      {canEdit && (
+        <Link
+          href={`/admin/jobs/${job.id}/edit`}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          Edit job
+        </Link>
+      )}
 
       {showPublicPreview && (
         <JobPublicPreview job={publicJob} isDraft={job.status === "DRAFT"} />
@@ -153,6 +165,14 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           )}
         </CardContent>
       </Card>
+
+      {canManage && (
+        <JobManageActions
+          jobId={job.id}
+          status={job.status}
+          canManage={canManage}
+        />
+      )}
     </div>
   );
 }

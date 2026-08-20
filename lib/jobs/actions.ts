@@ -9,9 +9,12 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { slugifyJobTitle } from "@/lib/utils/slug";
 import {
+  archiveJobSchema,
+  closeJobSchema,
   createJobFormSchema,
   parseSkillsText,
   publishJobSchema,
+  updateJobSchema,
 } from "@/lib/validation/job-form";
 import type { z } from "zod";
 
@@ -224,6 +227,248 @@ export async function publishJob(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to publish job",
+    };
+  }
+}
+
+export async function updateJob(
+  input: z.infer<typeof updateJobSchema>
+): Promise<ActionResult<{ jobId: string }>> {
+  try {
+    const user = await requireAdminUser();
+    const parsed = updateJobSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const data = parsed.data;
+    const supabase = await createClient();
+
+    const { data: job, error: fetchError } = await supabase
+      .from("jobs")
+      .select("id, status, slug")
+      .eq("id", data.jobId)
+      .single();
+
+    if (fetchError || !job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    if (job.status === "ARCHIVED") {
+      return { success: false, error: "Archived jobs cannot be edited" };
+    }
+
+    const totalWeight = data.criteria
+      .filter((c) => c.criteriaType === "WEIGHT")
+      .reduce((sum, c) => sum + c.weight, 0);
+
+    const { error: jobError } = await supabase
+      .from("jobs")
+      .update({
+        title: data.title,
+        job_type: data.jobType,
+        description: data.description ?? null,
+        responsibilities: data.responsibilities ?? null,
+        requirements: data.requirements ?? null,
+        required_skills: parseSkillsText(data.requiredSkillsText),
+        preferred_skills: parseSkillsText(data.preferredSkillsText),
+      })
+      .eq("id", job.id);
+
+    if (jobError) {
+      return { success: false, error: jobError.message };
+    }
+
+    const { data: scoringModel, error: modelFetchError } = await supabase
+      .from("scoring_models")
+      .select("id")
+      .eq("job_id", job.id)
+      .order("version", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (modelFetchError || !scoringModel) {
+      return { success: false, error: "Scoring model not found for this job" };
+    }
+
+    const { error: modelUpdateError } = await supabase
+      .from("scoring_models")
+      .update({
+        name: data.scoringName,
+        description: data.scoringDescription ?? null,
+        total_weight: totalWeight,
+      })
+      .eq("id", scoringModel.id);
+
+    if (modelUpdateError) {
+      return { success: false, error: modelUpdateError.message };
+    }
+
+    const { error: deleteCriteriaError } = await supabase
+      .from("scoring_criteria")
+      .delete()
+      .eq("scoring_model_id", scoringModel.id);
+
+    if (deleteCriteriaError) {
+      return { success: false, error: deleteCriteriaError.message };
+    }
+
+    const criteriaRows = data.criteria.map((criterion) => ({
+      scoring_model_id: scoringModel.id,
+      name: criterion.name,
+      description: criterion.description ?? null,
+      weight: criterion.weight,
+      criteria_type: criterion.criteriaType,
+      minimum_value: criterion.minimumValue ?? null,
+      is_mandatory: criterion.isMandatory,
+    }));
+
+    const { error: criteriaError } = await supabase
+      .from("scoring_criteria")
+      .insert(criteriaRows);
+
+    if (criteriaError) {
+      return { success: false, error: criteriaError.message };
+    }
+
+    const jdContent = [data.description, data.responsibilities, data.requirements]
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (jdContent.trim()) {
+      const { data: latestVersion } = await supabase
+        .from("job_description_versions")
+        .select("version")
+        .eq("job_id", job.id)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      await supabase.from("job_description_versions").insert({
+        job_id: job.id,
+        version: (latestVersion?.version ?? 0) + 1,
+        content: jdContent,
+        generated_by_ai: data.aiGeneratedJd ?? false,
+        created_by: user.id,
+      });
+    }
+
+    revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
+    revalidatePath(`/admin/jobs/${job.id}/edit`);
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${job.slug}`);
+
+    return { success: true, data: { jobId: job.id } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update job",
+    };
+  }
+}
+
+export async function closeJob(
+  input: z.infer<typeof closeJobSchema>
+): Promise<ActionResult<{ jobId: string }>> {
+  try {
+    await requireAdminUser();
+    const parsed = closeJobSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: "Invalid job id" };
+    }
+
+    const supabase = await createClient();
+    const { data: job, error: fetchError } = await supabase
+      .from("jobs")
+      .select("id, slug, status")
+      .eq("id", parsed.data.jobId)
+      .single();
+
+    if (fetchError || !job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    if (job.status !== "PUBLISHED") {
+      return { success: false, error: "Only published jobs can be closed" };
+    }
+
+    const { error: updateError } = await supabase
+      .from("jobs")
+      .update({
+        status: "CLOSED",
+        closed_at: new Date().toISOString(),
+      })
+      .eq("id", job.id);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${job.slug}`);
+
+    return { success: true, data: { jobId: job.id } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to close job",
+    };
+  }
+}
+
+export async function archiveJob(
+  input: z.infer<typeof archiveJobSchema>
+): Promise<ActionResult<{ jobId: string }>> {
+  try {
+    await requireAdminUser();
+    const parsed = archiveJobSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: "Invalid job id" };
+    }
+
+    const supabase = await createClient();
+    const { data: job, error: fetchError } = await supabase
+      .from("jobs")
+      .select("id, slug, status")
+      .eq("id", parsed.data.jobId)
+      .single();
+
+    if (fetchError || !job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    if (job.status === "ARCHIVED") {
+      return { success: true, data: { jobId: job.id } };
+    }
+
+    const { error: updateError } = await supabase
+      .from("jobs")
+      .update({
+        status: "ARCHIVED",
+        closed_at: new Date().toISOString(),
+      })
+      .eq("id", job.id);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
+    revalidatePath("/jobs");
+    revalidatePath(`/jobs/${job.slug}`);
+
+    return { success: true, data: { jobId: job.id } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to archive job",
     };
   }
 }

@@ -10,7 +10,7 @@ export const jobFormCriterionSchema = z.object({
   isMandatory: z.boolean(),
 });
 
-export const createJobFormSchema = z.object({
+const jobFormBaseSchema = z.object({
   title: z.string().min(1, "Job title is required"),
   jobType: jobTypeSchema,
   description: z.string().optional(),
@@ -22,7 +22,12 @@ export const createJobFormSchema = z.object({
   scoringDescription: z.string().optional(),
   criteria: z.array(jobFormCriterionSchema).min(1),
   aiGeneratedJd: z.boolean().optional(),
-}).superRefine((data, ctx) => {
+});
+
+function validateScoringWeights(
+  data: z.infer<typeof jobFormBaseSchema>,
+  ctx: z.RefinementCtx
+) {
   const weightCriteria = data.criteria.filter((c) => c.criteriaType === "WEIGHT");
   const totalWeight = weightCriteria.reduce((sum, c) => sum + c.weight, 0);
 
@@ -33,9 +38,25 @@ export const createJobFormSchema = z.object({
       path: ["criteria"],
     });
   }
-});
+}
+
+export const createJobFormSchema = jobFormBaseSchema.superRefine(validateScoringWeights);
 
 export const publishJobSchema = z.object({
+  jobId: z.string().uuid(),
+});
+
+export const updateJobSchema = jobFormBaseSchema
+  .extend({
+    jobId: z.string().uuid(),
+  })
+  .superRefine(validateScoringWeights);
+
+export const archiveJobSchema = z.object({
+  jobId: z.string().uuid(),
+});
+
+export const closeJobSchema = z.object({
   jobId: z.string().uuid(),
 });
 

@@ -72,3 +72,110 @@ export async function getPublishedJobBySlug(
 
   return mapPublicJob(data);
 }
+
+export type JobEditData = {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  jobType: string;
+  description: string;
+  responsibilities: string;
+  requirements: string;
+  requiredSkillsText: string;
+  preferredSkillsText: string;
+  scoringName: string;
+  scoringDescription: string;
+  criteria: Array<{
+    name: string;
+    description?: string;
+    weight: number;
+    criteriaType: "WEIGHT" | "MINIMUM" | "MANDATORY";
+    minimumValue?: number;
+    isMandatory: boolean;
+  }>;
+};
+
+export async function getJobForEdit(jobId: string): Promise<JobEditData | null> {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+
+  const { data: job, error } = await supabase
+    .from("jobs")
+    .select(
+      `
+      id,
+      title,
+      slug,
+      status,
+      job_type,
+      description,
+      responsibilities,
+      requirements,
+      required_skills,
+      preferred_skills,
+      scoring_models(
+        id,
+        name,
+        description,
+        version,
+        scoring_criteria(
+          name,
+          description,
+          weight,
+          criteria_type,
+          minimum_value,
+          is_mandatory
+        )
+      )
+    `
+    )
+    .eq("id", jobId)
+    .single();
+
+  if (error || !job) return null;
+
+  const models = job.scoring_models as unknown as Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    version: number;
+    scoring_criteria: Array<{
+      name: string;
+      description: string | null;
+      weight: number;
+      criteria_type: "WEIGHT" | "MINIMUM" | "MANDATORY";
+      minimum_value: number | null;
+      is_mandatory: boolean;
+    }>;
+  }>;
+
+  const scoringModel =
+    models?.sort((a, b) => b.version - a.version)[0] ?? null;
+
+  if (!scoringModel) return null;
+
+  return {
+    id: job.id,
+    title: job.title,
+    slug: job.slug,
+    status: job.status,
+    jobType: job.job_type,
+    description: job.description ?? "",
+    responsibilities: job.responsibilities ?? "",
+    requirements: job.requirements ?? "",
+    requiredSkillsText: (job.required_skills ?? []).join(", "),
+    preferredSkillsText: (job.preferred_skills ?? []).join(", "),
+    scoringName: scoringModel.name,
+    scoringDescription: scoringModel.description ?? "",
+    criteria: (scoringModel.scoring_criteria ?? []).map((criterion) => ({
+      name: criterion.name,
+      description: criterion.description ?? undefined,
+      weight: Number(criterion.weight),
+      criteriaType: criterion.criteria_type,
+      minimumValue:
+        criterion.minimum_value !== null ? Number(criterion.minimum_value) : undefined,
+      isMandatory: criterion.is_mandatory,
+    })),
+  };
+}
