@@ -1,14 +1,6 @@
-# Vercel Design System Analysis
+Design System Analysis
 
-> Source: https://vercel.com/  
-> Measured: May 17, 2026  
-> Analysis by DesignMD
-
----
-
----
-name: Vercel
-url: https://vercel.com/
+name: ATS
 colors:
   primary: '#171717'
   primary-text: '#ffffff'
@@ -71,7 +63,7 @@ components:
 ---
 
 ## 1. Visual Theme & Atmosphere
-Vercel's design system projects precision and performance, built on a stark monochrome foundation of `#171717` (black) and `#ffffff` (white). This high-contrast world is softened by subtle background grids and a signature hero element: a vibrant, soft-focus gradient, often transitioning from orange to a teal green (inferred from screenshot). The typography is a key differentiator, pairing the technical, clean lines of `Geist Mono` for all headings with the highly legible sans-serif `Geist` for body copy. This dual-font approach establishes a clear, developer-centric voice that is both authoritative and modern.
+ATS's design system projects precision and performance, built on a stark monochrome foundation of `#171717` (black) and `#ffffff` (white). This high-contrast world is softened by subtle background grids and a signature hero element: a vibrant, soft-focus gradient, often transitioning from orange to a teal green (inferred from screenshot). The typography is a key differentiator, pairing the technical, clean lines of `Geist Mono` for all headings with the highly legible sans-serif `Geist` for body copy. This dual-font approach establishes a clear, developer-centric voice that is both authoritative and modern.
 
 The system's geometry is defined by sharp `6px` corner radii on interactive elements and containers, contrasted with fully-rounded `9999px` "pill" shapes for standalone calls-to-action. While the overall aesthetic is minimalist, it avoids feeling sterile through these careful typographic choices, subtle shadows, and the burst of color in its hero gradients. Micro-interactions are handled with quick, non-intrusive CSS transitions, typically around `200ms`, reinforcing the platform's focus on speed.
 
@@ -394,7 +386,7 @@ Small, inline badges used to indicate status, such as "NEW". They feature a thin
     - `9999px (full)`: Reserved for pill-shaped buttons and toggles, creating a strong visual distinction.
 
 ## 6. Depth & Elevation
-Vercel's elevation system is subtle, relying more on borders than heavy shadows for depth at lower levels. Shadows become more prominent for transient, overlay elements like menus and modals. Z-index values are sourced directly from the live site.
+ATS's elevation system is subtle, relying more on borders than heavy shadows for depth at lower levels. Shadows become more prominent for transient, overlay elements like menus and modals. Z-index values are sourced directly from the live site.
 
 | Level | Treatment | Use | z-index |
 | :--- | :--- | :--- | :--- |
