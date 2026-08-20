@@ -2,7 +2,7 @@
 
 AI-powered recruitment management platform for hiring teams. Publish roles, accept applications, screen CVs with vision + reasoning models, and review candidates in an admin dashboard—with human oversight for every hiring decision.
 
-**Live demo:** [ats.galvan.vercel.app](https://ats.galvan.vercel.app)
+**Live demo:** [ats.galvan.vercel.app](https://ats-galvan.vercel.app)
 
 ---
 
