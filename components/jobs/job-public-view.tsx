@@ -15,7 +15,7 @@ export function JobPublicView({ job }: JobPublicViewProps) {
     <div className="space-y-6">
       <div className="space-y-3">
         <Badge variant="outline">{formatJobType(job.jobType)}</Badge>
-        <h1 className="font-mono text-3xl tracking-tight">{job.title}</h1>
+        <h1 className="font-mono text-2xl tracking-tight sm:text-3xl">{job.title}</h1>
         {job.publishedAt && (
           <p className="text-xs text-muted-foreground">
             Posted {new Date(job.publishedAt).toLocaleDateString()}

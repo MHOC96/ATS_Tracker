@@ -100,7 +100,7 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
             </p>
           )}
 
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
             {loading ? "Submitting…" : "Submit application"}
           </Button>
         </form>

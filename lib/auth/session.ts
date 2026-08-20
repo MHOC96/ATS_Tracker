@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,7 +9,7 @@ export type AppUser = {
   role: "ADMIN" | "RECRUITER" | "REVIEWER";
 };
 
-export async function getSessionUser(): Promise<AppUser | null> {
+export const getSessionUser = cache(async (): Promise<AppUser | null> => {
   const supabase = await createClient();
 
   const {
@@ -38,7 +39,7 @@ export async function getSessionUser(): Promise<AppUser | null> {
     fullName: profile.full_name,
     role: profile.role,
   };
-}
+});
 
 export async function requireSessionUser(): Promise<AppUser> {
   const user = await getSessionUser();

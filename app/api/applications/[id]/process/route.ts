@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { queueApplicationProcessing } from "@/lib/queue/handoff";
 
 /**
@@ -11,12 +11,23 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  try {
-    const result = await queueApplicationProcessing(id);
-    return NextResponse.json(result, { status: 202 });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to queue processing";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  after(async () => {
+    try {
+      await queueApplicationProcessing(id);
+    } catch (error) {
+      console.error(
+        `[queue] API handoff failed for application ${id}:`,
+        error instanceof Error ? error.message : error
+      );
+    }
+  });
+
+  return NextResponse.json(
+    {
+      queued: true,
+      applicationId: id,
+      message: "Application queued for AI processing on Railway worker.",
+    },
+    { status: 202 }
+  );
 }

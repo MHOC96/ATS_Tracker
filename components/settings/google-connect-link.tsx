@@ -1,4 +1,5 @@
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type GoogleConnectLinkProps = {
   label: string;
@@ -9,7 +10,10 @@ type GoogleConnectLinkProps = {
  */
 export function GoogleConnectLink({ label }: GoogleConnectLinkProps) {
   return (
-    <a href="/api/google/authorize" className={buttonVariants({ size: "sm" })}>
+    <a
+      href="/api/google/authorize"
+      className={cn(buttonVariants({ size: "sm" }), "w-full sm:w-auto")}
+    >
       {label}
     </a>
   );

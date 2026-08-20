@@ -7,6 +7,11 @@ import {
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
 const USERINFO_EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
 
+const REFRESH_TOKEN_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let cachedRefreshToken: string | null | undefined;
+let refreshTokenCacheExpiresAt = 0;
+
 export const GOOGLE_OAUTH_SCOPES = [DRIVE_SCOPE, USERINFO_EMAIL_SCOPE];
 
 export function getOAuthRedirectUri(origin: string) {
@@ -21,12 +26,27 @@ export function isOAuthCredentialsConfigured(): boolean {
   );
 }
 
+export function invalidateGoogleRefreshTokenCache(): void {
+  cachedRefreshToken = undefined;
+  refreshTokenCacheExpiresAt = 0;
+}
+
 export async function getGoogleRefreshToken(): Promise<string | null> {
   if (process.env.GOOGLE_OAUTH_REFRESH_TOKEN) {
     return process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
   }
 
-  return getPlatformSetting(PLATFORM_SETTING_KEYS.googleRefreshToken);
+  const now = Date.now();
+  if (cachedRefreshToken !== undefined && now < refreshTokenCacheExpiresAt) {
+    return cachedRefreshToken;
+  }
+
+  cachedRefreshToken = await getPlatformSetting(
+    PLATFORM_SETTING_KEYS.googleRefreshToken
+  );
+  refreshTokenCacheExpiresAt = now + REFRESH_TOKEN_CACHE_TTL_MS;
+
+  return cachedRefreshToken;
 }
 
 export async function isOAuthDriveAuthorized(): Promise<boolean> {

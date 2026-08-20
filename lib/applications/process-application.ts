@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { uploadFileToDriveFolder } from "@/lib/google/drive";
-import { queueApplicationProcessing } from "@/lib/queue/handoff";
+import { scheduleApplicationProcessing } from "@/lib/queue/handoff";
 
 type JobRow = {
   id: string;
@@ -121,7 +121,7 @@ export async function createApplicationWithCv(
     status: "QUEUED",
   });
 
-  await queueApplicationProcessing(application.id);
+  scheduleApplicationProcessing(application.id);
 
   return {
     success: true,

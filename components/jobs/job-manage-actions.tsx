@@ -72,11 +72,12 @@ export function JobManageActions({
       <CardHeader>
         <CardTitle className="font-mono text-lg font-normal">Manage job</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-wrap gap-3">
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {status === "PUBLISHED" && (
           <Button
             type="button"
             variant="outline"
+            className="w-full sm:w-auto"
             disabled={loading !== null}
             onClick={handleClose}
           >
@@ -87,6 +88,7 @@ export function JobManageActions({
         <Button
           type="button"
           variant="destructive"
+          className="w-full sm:w-auto"
           disabled={loading !== null}
           onClick={handleArchive}
         >

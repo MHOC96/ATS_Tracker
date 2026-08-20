@@ -16,6 +16,11 @@ export type RecentApplicationRow = {
   appliedAt: string;
 };
 
+export type DashboardPageData = {
+  stats: DashboardStats;
+  recentApplications: RecentApplicationRow[];
+};
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await createClient();
 
@@ -43,6 +48,17 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pendingReview: pendingRes.count ?? 0,
     interviews: interviewRes.count ?? 0,
   };
+}
+
+export async function getDashboardPageData(
+  recentLimit = 8
+): Promise<DashboardPageData> {
+  const [stats, recentApplications] = await Promise.all([
+    getDashboardStats(),
+    getRecentApplications(recentLimit),
+  ]);
+
+  return { stats, recentApplications };
 }
 
 export async function getRecentApplications(

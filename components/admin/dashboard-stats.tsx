@@ -1,5 +1,8 @@
+import type {
+  DashboardStats,
+  RecentApplicationRow,
+} from "@/lib/dashboard/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDashboardStats } from "@/lib/dashboard/queries";
 
 type StatCardProps = {
   title: string;
@@ -25,9 +28,11 @@ function StatCard({ title, value, description }: StatCardProps) {
   );
 }
 
-export async function DashboardStats() {
-  const stats = await getDashboardStats();
+type DashboardStatsProps = {
+  stats: DashboardStats;
+};
 
+export function DashboardStats({ stats }: DashboardStatsProps) {
   const items = [
     {
       title: "Active Jobs",

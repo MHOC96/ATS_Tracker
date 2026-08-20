@@ -37,10 +37,10 @@ export default async function CandidateDetailPage({
           >
             ← Back to candidates
           </Link>
-          <h1 className="font-mono text-2xl tracking-tight">
+          <h1 className="break-words font-mono text-xl tracking-tight sm:text-2xl">
             {application.candidate.fullName ?? "Unknown candidate"}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 break-words text-sm text-muted-foreground">
             {application.job.title} · Applied{" "}
             {new Date(application.appliedAt).toLocaleDateString()}
           </p>
@@ -48,7 +48,7 @@ export default async function CandidateDetailPage({
         <Badge variant="outline">{application.status}</Badge>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_min(100%,360px)]">
         <div className="space-y-8">
           <Card>
             <CardHeader>

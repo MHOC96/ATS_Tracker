@@ -87,7 +87,7 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
               value={decision}
               onValueChange={(value) => setDecision(value ?? "")}
             >
-              <SelectTrigger id="decision">
+              <SelectTrigger id="decision" className="w-full">
                 <SelectValue placeholder="Select decision" />
               </SelectTrigger>
               <SelectContent>
@@ -111,7 +111,7 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
             </p>
           )}
 
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
             {loading ? "Saving…" : "Save decision"}
           </Button>
         </form>

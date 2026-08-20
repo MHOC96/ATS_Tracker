@@ -28,7 +28,7 @@ export function ScoreSummary({ score }: ScoreSummaryProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-4">
-            <p className="font-mono text-4xl tracking-tight">
+            <p className="font-mono text-3xl tracking-tight sm:text-4xl">
               {Math.round(score.finalScore)}%
             </p>
             <Badge variant={recommendationVariant(score.recommendation)}>

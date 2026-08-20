@@ -20,21 +20,22 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const user = await requireSessionUser();
   const supabase = await createClient();
 
-  const { data: job, error } = await supabase
-    .from("jobs")
-    .select(
-      "id, title, slug, job_type, status, description, responsibilities, requirements, required_skills, preferred_skills, published_at"
-    )
-    .eq("id", id)
-    .single();
+  const [{ data: job, error }, { data: applications }] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select(
+        "id, title, slug, job_type, status, description, responsibilities, requirements, required_skills, preferred_skills, published_at"
+      )
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("candidate_applications")
+      .select("id, status, applied_at, candidates(full_name, email)")
+      .eq("job_id", id)
+      .order("applied_at", { ascending: false }),
+  ]);
 
   if (error || !job) notFound();
-
-  const { data: applications } = await supabase
-    .from("candidate_applications")
-    .select("id, status, applied_at, candidates(full_name, email)")
-    .eq("job_id", id)
-    .order("applied_at", { ascending: false });
 
   const canUpload = user.role !== "REVIEWER" && job.status === "PUBLISHED";
   const canPublish = user.role === "ADMIN" && job.status === "DRAFT";
@@ -59,8 +60,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-mono text-2xl tracking-tight">{job.title}</h1>
-          <p className="mt-2 font-mono text-xs text-muted-foreground">
+          <h1 className="break-words font-mono text-xl tracking-tight sm:text-2xl">{job.title}</h1>
+          <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
             {job.slug} · {job.job_type.replace(/_/g, " ")}
           </p>
         </div>
@@ -72,7 +73,10 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       {canEdit && (
         <Link
           href={`/admin/jobs/${job.id}/edit`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "inline-flex w-full sm:w-auto"
+          )}
         >
           Edit job
         </Link>
@@ -83,15 +87,18 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       )}
 
       {job.status === "PUBLISHED" && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <Link
             href={`/jobs/${job.slug}`}
             target="_blank"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "inline-flex w-full sm:w-auto"
+            )}
           >
             View public page
           </Link>
-          <p className="text-xs text-muted-foreground">
+          <p className="break-all text-xs text-muted-foreground">
             Candidates apply at /jobs/{job.slug}
           </p>
         </div>
@@ -144,20 +151,22 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 return (
                   <li
                     key={application.id}
-                    className="flex items-center justify-between gap-4 py-3 text-sm"
+                    className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <Link
                         href={`/admin/candidates/${application.id}`}
-                        className="font-medium hover:underline"
+                        className="break-words font-medium hover:underline"
                       >
                         {candidate?.full_name ?? "Unknown candidate"}
                       </Link>
-                      <p className="text-muted-foreground">
+                      <p className="break-all text-muted-foreground">
                         {candidate?.email ?? "No email"}
                       </p>
                     </div>
-                    <Badge variant="outline">{application.status}</Badge>
+                    <Badge variant="outline" className="w-fit shrink-0">
+                      {application.status}
+                    </Badge>
                   </li>
                 );
               })}

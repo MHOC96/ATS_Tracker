@@ -18,7 +18,7 @@ export default async function CareersHomePage() {
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Join our team
         </p>
-        <h1 className="font-mono text-3xl tracking-tight lg:text-4xl">
+        <h1 className="font-mono text-2xl tracking-tight sm:text-3xl lg:text-4xl">
           Open opportunities
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
@@ -44,11 +44,13 @@ export default async function CareersHomePage() {
           {jobs.slice(0, 4).map((job) => (
             <Card key={job.id}>
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <CardTitle className="font-mono text-lg font-normal">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <CardTitle className="font-mono text-base font-normal sm:text-lg">
                     {job.title}
                   </CardTitle>
-                  <Badge variant="outline">{formatJobType(job.jobType)}</Badge>
+                  <Badge variant="outline" className="w-fit shrink-0">
+                    {formatJobType(job.jobType)}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

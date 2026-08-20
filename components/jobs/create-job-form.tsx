@@ -158,12 +158,13 @@ export function CreateJobForm() {
   return (
     <form onSubmit={form.handleSubmit(onSaveDraft)} className="space-y-8">
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <CardTitle className="font-mono text-lg font-normal">Job details</CardTitle>
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="w-full shrink-0 sm:w-auto"
             onClick={onGenerateJd}
             disabled={generatingJd}
           >
@@ -229,7 +230,7 @@ export function CreateJobForm() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="font-mono text-lg font-normal">Scoring model</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -240,6 +241,7 @@ export function CreateJobForm() {
             type="button"
             variant="outline"
             size="sm"
+            className="w-full shrink-0 sm:w-auto"
             onClick={() =>
               append({
                 name: "",
@@ -327,7 +329,7 @@ export function CreateJobForm() {
       )}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? "Saving…" : "Save draft"}
         </Button>
         {createdJobId && (

@@ -10,7 +10,7 @@ import { LoginForm } from "@/components/auth/login-form";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-3 py-8 sm:px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="font-mono text-xl font-normal">

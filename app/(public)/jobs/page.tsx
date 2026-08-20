@@ -32,10 +32,10 @@ export default async function JobsIndexPage() {
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border">
           {jobs.map((job) => (
-            <li key={job.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
-              <div className="min-w-0">
-                <p className="font-medium">{job.title}</p>
-                <p className="text-xs text-muted-foreground">
+            <li key={job.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-medium">{job.title}</p>
+                <p className="break-words text-xs text-muted-foreground">
                   {formatJobType(job.jobType)}
                   {job.requiredSkills.length > 0 &&
                     ` · ${job.requiredSkills.slice(0, 3).join(", ")}`}
@@ -43,7 +43,10 @@ export default async function JobsIndexPage() {
               </div>
               <Link
                 href={`/jobs/${job.slug}`}
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "w-full sm:w-auto"
+                )}
               >
                 Apply
               </Link>

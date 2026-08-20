@@ -3,6 +3,8 @@
  * Next.js / Vercel -> Queue -> Railway Worker -> Gemini + Groq -> Supabase
  */
 
+const HANDOFF_TIMEOUT_MS = 5000;
+
 type QueueResult = {
   queued: boolean;
   applicationId: string;
@@ -12,11 +14,10 @@ type QueueResult = {
 export async function queueApplicationProcessing(
   applicationId: string
 ): Promise<QueueResult> {
-  const workerUrl = process.env.RAILWAY_WORKER_URL;
+  const workerUrl = process.env.RAILWAY_WORKER_URL?.replace(/\/$/, "");
   const workerSecret = process.env.WORKER_API_SECRET;
 
   if (!workerUrl) {
-    // Development fallback — worker not configured yet
     return {
       queued: false,
       applicationId,
@@ -25,22 +26,47 @@ export async function queueApplicationProcessing(
     };
   }
 
-  const response = await fetch(`${workerUrl}/process`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(workerSecret ? { Authorization: `Bearer ${workerSecret}` } : {}),
-    },
-    body: JSON.stringify({ applicationId }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), HANDOFF_TIMEOUT_MS);
 
-  if (!response.ok) {
-    throw new Error(`Worker rejected job: ${response.status}`);
+  try {
+    const response = await fetch(`${workerUrl}/process`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(workerSecret ? { Authorization: `Bearer ${workerSecret}` } : {}),
+      },
+      body: JSON.stringify({ applicationId }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Worker rejected job: ${response.status}`);
+    }
+
+    return {
+      queued: true,
+      applicationId,
+      message: "Application queued for AI processing on Railway worker.",
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(
+        `Worker handoff timed out after ${HANDOFF_TIMEOUT_MS}ms`
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  return {
-    queued: true,
-    applicationId,
-    message: "Application queued for AI processing on Railway worker.",
-  };
+/** Fire-and-forget handoff — does not block the caller on Railway latency. */
+export function scheduleApplicationProcessing(applicationId: string): void {
+  void queueApplicationProcessing(applicationId).catch((error) => {
+    console.error(
+      `[queue] handoff failed for application ${applicationId}:`,
+      error instanceof Error ? error.message : error
+    );
+  });
 }

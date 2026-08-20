@@ -76,7 +76,7 @@ export function UploadCvForm({ jobId, jobTitle }: UploadCvFormProps) {
             </p>
           )}
 
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
             {loading ? "Uploading…" : "Upload and queue screening"}
           </Button>
         </form>

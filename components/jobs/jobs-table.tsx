@@ -40,19 +40,21 @@ export async function JobsTable() {
       <CardContent>
         <ul className="divide-y divide-border">
           {jobs.map((job) => (
-            <li key={job.id} className="flex items-center justify-between gap-4 py-4">
-              <div className="min-w-0">
+            <li key={job.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="min-w-0 flex-1">
                 <Link
                   href={`/admin/jobs/${job.id}`}
-                  className="text-sm font-medium hover:underline"
+                  className="break-words text-sm font-medium hover:underline"
                 >
                   {job.title}
                 </Link>
-                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
                   {job.slug} · {job.job_type.replace(/_/g, " ")}
                 </p>
               </div>
-              <Badge variant="outline">{job.status}</Badge>
+              <Badge variant="outline" className="w-fit shrink-0">
+                {job.status}
+              </Badge>
             </li>
           ))}
         </ul>

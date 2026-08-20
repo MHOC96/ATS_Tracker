@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { requireAdminUser } from "@/lib/auth/session";
 import {
   isDriveFullyConfigured,
   isOAuthCredentialsConfigured,
@@ -23,7 +22,6 @@ type SettingsPageProps = {
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
-  await requireAdminUser();
   const params = await searchParams;
 
   const hasClientCredentials = isOAuthCredentialsConfigured();
@@ -42,7 +40,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-mono text-2xl tracking-tight">Settings</h1>
+        <h1 className="font-mono text-xl tracking-tight sm:text-2xl">Settings</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Connect Google Drive once — the app stores the refresh token automatically.
         </p>

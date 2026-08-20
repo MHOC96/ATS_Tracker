@@ -32,7 +32,7 @@ export function PublishJobButton({ jobId }: PublishJobButtonProps) {
 
   return (
     <div className="space-y-2">
-      <Button onClick={handlePublish} disabled={loading}>
+      <Button onClick={handlePublish} className="w-full sm:w-auto" disabled={loading}>
         {loading ? "Publishing…" : "Publish job"}
       </Button>
       {error && <p className="text-sm text-destructive">{error}</p>}

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getRecentApplications } from "@/lib/dashboard/queries";
+import type { RecentApplicationRow } from "@/lib/dashboard/queries";
 
-export async function RecentApplications() {
-  const applications = await getRecentApplications();
+type RecentApplicationsProps = {
+  applications: RecentApplicationRow[];
+};
 
+export function RecentApplications({ applications }: RecentApplicationsProps) {
   return (
     <Card>
       <CardHeader>
@@ -29,7 +31,7 @@ export async function RecentApplications() {
               <li key={application.id}>
                 <Link
                   href={`/admin/candidates/${application.id}`}
-                  className="flex items-center justify-between gap-4 py-4 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-md"
+                  className="flex flex-col gap-2 py-4 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-md sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
@@ -39,7 +41,7 @@ export async function RecentApplications() {
                       {application.jobTitle}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end sm:gap-3">
                     {application.score !== null && (
                       <span className="font-mono text-sm">
                         {Math.round(application.score)}%

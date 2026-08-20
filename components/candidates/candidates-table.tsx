@@ -28,18 +28,18 @@ export function CandidatesTable({
               <li key={application.id}>
                 <Link
                   href={`/admin/candidates/${application.id}`}
-                  className="flex flex-wrap items-center justify-between gap-4 py-4 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-md"
+                  className="flex flex-col gap-3 py-4 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-md sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4"
                 >
-                  <div className="min-w-0">
-                    <p className="font-medium">{application.candidateName}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-medium">{application.candidateName}</p>
+                    <p className="break-words text-sm text-muted-foreground">
                       {application.jobTitle}
                       {application.candidateEmail
                         ? ` · ${application.candidateEmail}`
                         : ""}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end sm:gap-3">
                     {application.finalScore !== null && (
                       <span className="font-mono text-sm">
                         {Math.round(application.finalScore)}%

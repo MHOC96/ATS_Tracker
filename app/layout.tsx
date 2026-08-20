@@ -18,6 +18,11 @@ export const metadata: Metadata = {
     "Autonomous AI recruitment management platform for hiring teams.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +33,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col overflow-x-hidden font-sans">{children}</body>
     </html>
   );
 }

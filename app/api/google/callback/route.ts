@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import {
   createOAuth2Client,
   getOAuthRedirectUri,
+  invalidateGoogleRefreshTokenCache,
 } from "@/lib/google/oauth";
 import {
   getPlatformSetting,
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
         PLATFORM_SETTING_KEYS.googleRefreshToken,
         tokens.refresh_token
       );
+      invalidateGoogleRefreshTokenCache();
     } else {
       const existing = await getPlatformSetting(
         PLATFORM_SETTING_KEYS.googleRefreshToken
