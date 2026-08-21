@@ -1,4 +1,5 @@
 import { moveDriveFile } from "../google/drive.js";
+import { workerConfig } from "../config.js";
 import { createAdminClient } from "../supabase.js";
 import type { RecruitmentState } from "../graph/state.js";
 
@@ -61,7 +62,7 @@ export async function finalizeProcessingFailure(
   if (options.extractionStatus) {
     await supabase.from("screening_results").insert({
       candidate_application_id: state.applicationId,
-      model: process.env.VISION_MODEL ?? "gemini-2.0-flash",
+      model: workerConfig.visionModel,
       extraction_status: options.extractionStatus,
       raw_structured_data: state.candidateData,
       processing_time_ms: state.processingStartedAt

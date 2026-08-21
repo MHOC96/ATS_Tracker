@@ -1,7 +1,7 @@
-import { resolveReasoningModel } from "./models.js";
+import { resolveReasoningModel, resolveVisionModel } from "./models.js";
 
 export const workerConfig = {
-  visionModel: process.env.VISION_MODEL ?? "gemini-2.0-flash",
+  visionModel: resolveVisionModel(process.env.VISION_MODEL),
   reasoningModel: resolveReasoningModel(process.env.REASONING_MODEL),
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
   groqApiKey: process.env.GROQ_API_KEY ?? "",
