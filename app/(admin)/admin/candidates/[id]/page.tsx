@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CandidateEditForm } from "@/components/candidates/candidate-edit-form";
+import { ApplicationDeleteButton } from "@/components/candidates/application-delete-button";
 import { DecisionForm } from "@/components/candidates/decision-form";
 import { ScoreSummary } from "@/components/candidates/score-summary";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,8 @@ export default async function CandidateDetailPage({
   if (!application) notFound();
 
   const canDecide = user.role !== "REVIEWER";
+  const canEdit = user.role !== "REVIEWER";
+  const canDelete = user.role === "ADMIN";
 
   return (
     <div className="space-y-8">
@@ -151,8 +155,21 @@ export default async function CandidateDetailPage({
           )}
         </div>
 
-        <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="lg:sticky lg:top-8 lg:self-start space-y-8">
+          <CandidateEditForm
+            applicationId={application.id}
+            initialFullName={application.candidate.fullName ?? ""}
+            initialEmail={application.candidate.email}
+            initialPhone={application.candidate.phone}
+            initialLocation={application.candidate.location}
+            initialStatus={application.status}
+            canEdit={canEdit}
+          />
           <DecisionForm applicationId={application.id} canDecide={canDecide} />
+          <ApplicationDeleteButton
+            applicationId={application.id}
+            canDelete={canDelete}
+          />
         </div>
       </div>
     </div>

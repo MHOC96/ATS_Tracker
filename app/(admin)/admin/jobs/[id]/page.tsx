@@ -20,7 +20,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const user = await requireSessionUser();
   const supabase = await createClient();
 
-  const [{ data: job, error }, { data: applications }] = await Promise.all([
+  const [{ data: job, error }, { data: applications, count: applicationCount }] =
+    await Promise.all([
     supabase
       .from("jobs")
       .select(
@@ -30,7 +31,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       .single(),
     supabase
       .from("candidate_applications")
-      .select("id, status, applied_at, candidates(full_name, email)")
+      .select("id, status, applied_at, candidates(full_name, email)", {
+        count: "exact",
+      })
       .eq("job_id", id)
       .order("applied_at", { ascending: false }),
   ]);
@@ -179,6 +182,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         <JobManageActions
           jobId={job.id}
           status={job.status}
+          applicationCount={applicationCount ?? 0}
           canManage={canManage}
         />
       )}
