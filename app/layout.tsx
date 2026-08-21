@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} dark h-full`}
+      className={`${inter.variable} ${jetbrainsMono.variable} dark h-full overflow-x-hidden`}
     >
       <body className="min-h-full flex flex-col overflow-x-hidden bg-void text-paper">
         {children}

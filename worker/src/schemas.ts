@@ -1,5 +1,39 @@
 import { z } from "zod";
 
+export const profileLinkSchema = z.object({
+  label: z.string().min(1),
+  url: z.string().min(1),
+});
+
+export type ProfileLink = z.infer<typeof profileLinkSchema>;
+
+export function normalizeProfileUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed) || /^mailto:/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `https://${trimmed.replace(/^\/+/, "")}`;
+}
+
+export function normalizeProfileLinks(links: ProfileLink[]): ProfileLink[] {
+  const seen = new Set<string>();
+  const normalized: ProfileLink[] = [];
+
+  for (const link of links) {
+    const label = link.label.trim();
+    const url = normalizeProfileUrl(link.url);
+    if (!label || !url) continue;
+
+    const key = url.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    normalized.push({ label, url });
+  }
+
+  return normalized.slice(0, 20);
+}
+
 export const candidateExtractionSchema = z.object({
   fullName: z.string().nullable(),
   email: z
@@ -23,6 +57,10 @@ export const candidateExtractionSchema = z.object({
       ).filter(Boolean)
     ),
   projects: z.array(z.record(z.string(), z.unknown())).default([]),
+  profileLinks: z
+    .array(profileLinkSchema)
+    .default([])
+    .transform(normalizeProfileLinks),
   extractionConfidence: z.number().min(0).max(1).nullable().optional(),
 });
 

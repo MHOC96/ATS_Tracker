@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { GoogleConnectLink } from "@/components/settings/google-connect-link";
 import { PageTitle } from "@/components/layout/page-title";
@@ -9,6 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  formatCooldownRemaining,
+  getGoogleOAuthConnectCooldown,
+} from "@/lib/google/oauth-connect-cooldown";
+import {
+  getOAuthRedirectUri,
   isDriveFullyConfigured,
   isOAuthCredentialsConfigured,
   isOAuthDriveAuthorized,
@@ -19,11 +25,18 @@ type SettingsPageProps = {
   searchParams: Promise<{
     google_connected?: string;
     google_error?: string;
+    retry_after?: string;
   }>;
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const params = await searchParams;
+  const headersList = await headers();
+  const host =
+    headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "localhost:3000";
+  const protocol = headersList.get("x-forwarded-proto") ?? "http";
+  const requestOrigin = `${protocol}://${host}`;
+  const oauthRedirectUri = getOAuthRedirectUri(requestOrigin);
 
   const hasClientCredentials = isOAuthCredentialsConfigured();
   const connectedEmail = await getPlatformSetting(
@@ -31,6 +44,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   );
   const isConnected = await isOAuthDriveAuthorized();
   const driveReady = await isDriveFullyConfigured();
+  const cooldown = await getGoogleOAuthConnectCooldown();
+  const retryAfterParam = Number(params.retry_after);
+  const initialRemainingSeconds = Math.max(
+    cooldown.remainingSeconds,
+    Number.isFinite(retryAfterParam) ? retryAfterParam : 0
+  );
 
   const folderIdsConfigured = Boolean(
     process.env.GOOGLE_DRIVE_INCOMING_ROOT_ID &&
@@ -52,10 +71,21 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </div>
       )}
 
-      {params.google_error && (
+      {params.google_error && params.google_error !== "oauth_cooldown" && (
         <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           <XCircle className="size-4" />
           Google connection failed: {params.google_error}
+        </div>
+      )}
+
+      {params.google_error === "oauth_cooldown" && initialRemainingSeconds > 0 && (
+        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <XCircle className="size-4 shrink-0" />
+          Please wait{" "}
+          <span className="font-mono text-foreground">
+            {formatCooldownRemaining(initialRemainingSeconds)}
+          </span>{" "}
+          before connecting again.
         </div>
       )}
 
@@ -65,7 +95,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             Google Drive (OAuth)
           </CardTitle>
           <CardDescription>
-            Uses your personal Gmail quota. Click connect — no OAuth Playground needed.
+            Uses your personal Gmail quota. Click connect to authorize Drive access.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -74,6 +104,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               OAuth client in .env:{" "}
               <span className="font-mono text-foreground">
                 {hasClientCredentials ? "configured" : "missing"}
+              </span>
+            </li>
+            <li>
+              OAuth redirect URI:{" "}
+              <span className="break-all font-mono text-foreground">
+                {oauthRedirectUri}
               </span>
             </li>
             <li>
@@ -103,6 +139,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               label={
                 isConnected ? "Reconnect Google Drive" : "Connect Google Drive"
               }
+              initialRemainingSeconds={initialRemainingSeconds}
             />
           ) : (
             <p className="text-sm text-destructive">
@@ -110,15 +147,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               then restart the dev server.
             </p>
           )}
-
-          <p className="text-xs text-muted-foreground">
-            Add{" "}
-            <code className="break-all font-mono text-xs">
-              http://localhost:3000/api/google/callback
-            </code>{" "}
-            to Authorized redirect URIs in Google Cloud Console (not OAuth
-            Playground).
-          </p>
         </CardContent>
       </Card>
     </div>

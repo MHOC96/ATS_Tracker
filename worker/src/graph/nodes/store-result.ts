@@ -37,6 +37,7 @@ export async function storeResult(
         experience: candidate.experience,
         certifications: candidate.certifications,
         projects: candidate.projects,
+        profile_links: candidate.profileLinks,
         extracted_by_ai: true,
         extraction_model: workerConfig.visionModel,
       },

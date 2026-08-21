@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { jobTypeSchema } from "@/packages/shared/schemas";
+import {
+  jobTypeRequiresHiringPeriod,
+  jobTypeSchema,
+} from "@/packages/shared/schemas";
 
 export const jobFormCriterionSchema = z.object({
   name: z.string().min(1),
@@ -13,6 +16,8 @@ export const jobFormCriterionSchema = z.object({
 const jobFormBaseSchema = z.object({
   title: z.string().min(1, "Job title is required"),
   jobType: jobTypeSchema,
+  hiringPeriodStart: z.string().optional(),
+  hiringPeriodEnd: z.string().optional(),
   description: z.string().optional(),
   responsibilities: z.string().optional(),
   requirements: z.string().optional(),
@@ -40,7 +45,51 @@ function validateScoringWeights(
   }
 }
 
-export const createJobFormSchema = jobFormBaseSchema.superRefine(validateScoringWeights);
+function validateHiringPeriod(
+  data: z.infer<typeof jobFormBaseSchema>,
+  ctx: z.RefinementCtx
+) {
+  if (!jobTypeRequiresHiringPeriod(data.jobType)) {
+    return;
+  }
+
+  const start = data.hiringPeriodStart?.trim();
+  const end = data.hiringPeriodEnd?.trim();
+
+  if (!start) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Hiring period start date is required for internship and contract roles",
+      path: ["hiringPeriodStart"],
+    });
+  }
+
+  if (!end) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Hiring period end date is required for internship and contract roles",
+      path: ["hiringPeriodEnd"],
+    });
+  }
+
+  if (start && end && start > end) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "End date must be on or after the start date",
+      path: ["hiringPeriodEnd"],
+    });
+  }
+}
+
+function validateJobForm(data: z.infer<typeof jobFormBaseSchema>, ctx: z.RefinementCtx) {
+  validateScoringWeights(data, ctx);
+  validateHiringPeriod(data, ctx);
+}
+
+export const createJobFormSchema =
+  jobFormBaseSchema.superRefine(validateJobForm);
+
+export type JobFormValues = z.infer<typeof createJobFormSchema>;
 
 export const publishJobSchema = z.object({
   jobId: z.string().uuid(),
@@ -50,7 +99,7 @@ export const updateJobSchema = jobFormBaseSchema
   .extend({
     jobId: z.string().uuid(),
   })
-  .superRefine(validateScoringWeights);
+  .superRefine(validateJobForm);
 
 export const archiveJobSchema = z.object({
   jobId: z.string().uuid(),

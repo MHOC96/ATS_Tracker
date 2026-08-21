@@ -5,26 +5,19 @@ import { z } from "zod";
 import { requireSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import {
+  applicationStatusToAdminDecision,
+  recruiterOutcomeStatusSchema,
+} from "@/packages/shared/schemas";
+import {
   deleteApplicationSchema,
   updateCandidateSchema,
 } from "@/lib/validation/candidate-form";
 
 const decisionSchema = z.object({
   applicationId: z.string().uuid(),
-  decision: z.enum(["SHORTLIST", "INTERVIEW", "HOLD", "REJECT", "MANUAL_REVIEW"]),
+  status: recruiterOutcomeStatusSchema,
   notes: z.string().optional(),
 });
-
-const statusByDecision: Record<
-  z.infer<typeof decisionSchema>["decision"],
-  string
-> = {
-  SHORTLIST: "SHORTLISTED",
-  INTERVIEW: "INTERVIEW",
-  HOLD: "ON_HOLD",
-  REJECT: "REJECTED",
-  MANUAL_REVIEW: "MANUAL_REVIEW",
-};
 
 type DecisionResult = { success: true } | { success: false; error: string };
 
@@ -48,7 +41,8 @@ export async function saveAdminDecision(
     }
 
     const supabase = await createClient();
-    const { applicationId, decision, notes } = parsed.data;
+    const { applicationId, status, notes } = parsed.data;
+    const decision = applicationStatusToAdminDecision[status];
 
     const { error: decisionError } = await supabase.from("admin_decisions").insert({
       candidate_application_id: applicationId,
@@ -63,7 +57,7 @@ export async function saveAdminDecision(
 
     const { error: statusError } = await supabase
       .from("candidate_applications")
-      .update({ status: statusByDecision[decision] })
+      .update({ status })
       .eq("id", applicationId);
 
     if (statusError) {
@@ -105,8 +99,7 @@ export async function updateCandidate(
     }
 
     const supabase = await createClient();
-    const { applicationId, fullName, email, phone, location, status } =
-      parsed.data;
+    const { applicationId, fullName, email, phone, location } = parsed.data;
 
     const { data: application, error: fetchError } = await supabase
       .from("candidate_applications")
@@ -130,17 +123,6 @@ export async function updateCandidate(
 
     if (candidateError) {
       return { success: false, error: candidateError.message };
-    }
-
-    if (status) {
-      const { error: statusError } = await supabase
-        .from("candidate_applications")
-        .update({ status })
-        .eq("id", applicationId);
-
-      if (statusError) {
-        return { success: false, error: statusError.message };
-      }
     }
 
     revalidatePath("/admin/candidates");

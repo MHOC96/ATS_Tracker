@@ -75,7 +75,7 @@ export function ApplicationDeleteButton({
   }
 
   return (
-    <Card>
+    <Card className={cn("min-w-0", className)}>
       <CardHeader>
         <CardTitle>Delete application</CardTitle>
       </CardHeader>

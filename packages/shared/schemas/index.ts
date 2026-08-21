@@ -2,19 +2,37 @@ import { z } from "zod";
 
 import { jobTypeSchema } from "./job-types";
 
-export { jobStatusSchema, jobTypeSchema } from "./job-types";
+export { jobStatusSchema, jobTypeSchema, jobTypeRequiresHiringPeriod } from "./job-types";
 
-export const applicationStatusSchema = z.enum([
-  "APPLIED",
-  "PROCESSING",
-  "AI_REVIEWED",
-  "MANUAL_REVIEW",
-  "SHORTLISTED",
-  "INTERVIEW",
-  "ON_HOLD",
-  "REJECTED",
-  "HIRED",
-]);
+export {
+  adminDecisionOptions,
+  adminDecisionSchema,
+  applicationStatusDescriptions,
+  applicationStatusLabels,
+  applicationStatusSchema,
+  applicationStatusToAdminDecision,
+  formatAdminDecision,
+  formatApplicationStatus,
+  getApplicationStatusDescription,
+  isRecruiterOutcomeStatus,
+  isScreeningApplicationStatus,
+  isSystemManagedApplicationStatus,
+  recruiterApplicationStatusSchema,
+  recruiterEditableApplicationStatuses,
+  recruiterOutcomeOptions,
+  recruiterOutcomeStatusSchema,
+  recruiterOutcomeStatuses,
+  resolveApplicationStatusView,
+  screeningApplicationStatuses,
+  systemManagedApplicationStatuses,
+} from "./application-status";
+export type {
+  AdminDecision,
+  ApplicationStatus,
+  ApplicationStatusView,
+  RecruiterOutcomeStatus,
+  ScreeningApplicationStatus,
+} from "./application-status";
 
 export const userRoleSchema = z.enum(["ADMIN", "RECRUITER", "REVIEWER"]);
 
@@ -70,6 +88,14 @@ export const candidateExtractionSchema = z.object({
   experience: z.array(z.record(z.string(), z.unknown())).default([]),
   certifications: z.array(z.record(z.string(), z.unknown())).default([]),
   projects: z.array(z.record(z.string(), z.unknown())).default([]),
+  profileLinks: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        url: z.string().min(1),
+      })
+    )
+    .default([]),
 });
 
 export const queueProcessingSchema = z.object({

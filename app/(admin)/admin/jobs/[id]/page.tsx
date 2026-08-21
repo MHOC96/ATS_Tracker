@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireSessionUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { formatJobType } from "@/lib/jobs/format-job";
+import { formatHiringPeriod, getHiringPeriodLabel } from "@/lib/jobs/hiring-period";
 
 type JobDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -25,7 +27,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     supabase
       .from("jobs")
       .select(
-        "id, title, slug, job_type, status, description, responsibilities, requirements, required_skills, preferred_skills, published_at"
+        "id, title, slug, job_type, hiring_period_start, hiring_period_end, status, description, responsibilities, requirements, required_skills, preferred_skills, published_at"
       )
       .eq("id", id)
       .single(),
@@ -44,7 +46,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const canUpload = user.role !== "REVIEWER" && job.status === "PUBLISHED";
   const canPublish = user.role === "ADMIN" && job.status === "DRAFT";
   const canEdit = user.role === "ADMIN" && job.status !== "ARCHIVED";
-  const canManage = user.role === "ADMIN" && job.status !== "ARCHIVED";
+  const canManageJob = user.role === "ADMIN";
   const showPublicPreview = job.status === "DRAFT" || job.status === "PUBLISHED";
 
   const publicJob = {
@@ -52,6 +54,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     title: job.title,
     slug: job.slug,
     jobType: job.job_type,
+    hiringPeriodStart: job.hiring_period_start,
+    hiringPeriodEnd: job.hiring_period_end,
     description: job.description,
     responsibilities: job.responsibilities,
     requirements: job.requirements,
@@ -60,13 +64,18 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     publishedAt: job.published_at,
   };
 
+  const hiringPeriod = formatHiringPeriod(
+    job.hiring_period_start,
+    job.hiring_period_end
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="break-words text-[24px] font-[510] tracking-[-0.012em] text-paper sm:text-[32px]">{job.title}</h1>
           <p className="mt-2 break-all linear-mono text-[12px] text-fog">
-            {job.slug} · {job.job_type.replace(/_/g, " ")}
+            {job.slug} · {formatJobType(job.job_type)}
           </p>
         </div>
         <Badge variant="outline">{job.status}</Badge>
@@ -116,6 +125,14 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           <CardTitle>Job description</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-[14px] text-fog">
+          {hiringPeriod && (
+            <div>
+              <p className="font-[510] text-paper">
+                {getHiringPeriodLabel(job.job_type)}
+              </p>
+              <p className="text-mist">{hiringPeriod}</p>
+            </div>
+          )}
           {job.description && <p>{job.description}</p>}
           {job.responsibilities && (
             <div>
@@ -197,12 +214,12 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         </CardContent>
       </Card>
 
-      {canManage && (
+      {canManageJob && (
         <JobManageActions
           jobId={job.id}
           status={job.status}
           applicationCount={applicationCount ?? 0}
-          canManage={canManage}
+          canManage={canManageJob}
         />
       )}
     </div>

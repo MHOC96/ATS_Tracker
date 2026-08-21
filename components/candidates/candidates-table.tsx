@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ApplicationRowActions } from "@/components/candidates/application-row-actions";
+import { ApplicationPipelineBadges } from "@/components/candidates/application-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CandidateApplicationListItem } from "@/lib/candidates/queries";
@@ -12,6 +13,46 @@ type CandidatesTableProps = {
   canDelete?: boolean;
   deleteRedirectTo?: string;
 };
+
+function ApplicationRowMain({
+  application,
+  linked,
+}: {
+  application: CandidateApplicationListItem;
+  linked: boolean;
+}) {
+  const content = (
+    <div className="min-w-0 flex-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="min-w-0 break-words font-medium">
+          {application.candidateName}
+        </p>
+        <ApplicationPipelineBadges
+          variant="compact"
+          status={application.status}
+          hasAiScore={application.finalScore !== null}
+        />
+      </div>
+      <p className="mt-1 break-all text-sm text-muted-foreground">
+        {application.jobTitle}
+        {application.candidateEmail ? ` · ${application.candidateEmail}` : ""}
+      </p>
+    </div>
+  );
+
+  if (linked) {
+    return (
+      <Link
+        href={`/admin/candidates/${application.id}`}
+        className="min-w-0 flex-1 transition-opacity hover:opacity-80"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
+}
 
 export function CandidatesTable({
   applications,
@@ -36,50 +77,26 @@ export function CandidatesTable({
             {applications.map((application) => (
               <li
                 key={application.id}
-                className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
               >
-                <div className="min-w-0 flex-1">
-                  {showActions ? (
-                    <>
-                      <p className="break-words font-medium">
-                        {application.candidateName}
-                      </p>
-                      <p className="break-all text-sm text-muted-foreground">
-                        {application.jobTitle}
-                        {application.candidateEmail
-                          ? ` · ${application.candidateEmail}`
-                          : ""}
-                      </p>
-                    </>
-                  ) : (
-                    <Link
-                      href={`/admin/candidates/${application.id}`}
-                      className="block transition-colors hover:opacity-80"
-                    >
-                      <p className="break-words font-medium">
-                        {application.candidateName}
-                      </p>
-                      <p className="break-all text-sm text-muted-foreground">
-                        {application.jobTitle}
-                        {application.candidateEmail
-                          ? ` · ${application.candidateEmail}`
-                          : ""}
-                      </p>
-                    </Link>
-                  )}
-                </div>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-3">
+                <ApplicationRowMain
+                  application={application}
+                  linked={!showActions}
+                />
+                <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                   {application.finalScore !== null && (
                     <span className="font-mono text-sm">
                       {Math.round(application.finalScore)}%
                     </span>
                   )}
                   {application.recommendation && (
-                    <Badge variant="secondary" className="max-w-full whitespace-normal sm:whitespace-nowrap">
+                    <Badge
+                      variant="secondary"
+                      className="max-w-full whitespace-normal sm:whitespace-nowrap"
+                    >
                       {application.recommendation.replace(/_/g, " ")}
                     </Badge>
                   )}
-                  <Badge variant="outline" className="shrink-0">{application.status}</Badge>
                   {showActions && (
                     <ApplicationRowActions
                       applicationId={application.id}

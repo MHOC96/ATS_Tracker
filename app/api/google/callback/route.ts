@@ -12,6 +12,7 @@ import {
   PLATFORM_SETTING_KEYS,
   setPlatformSetting,
 } from "@/lib/platform/settings";
+import { startGoogleOAuthConnectCooldown } from "@/lib/google/oauth-connect-cooldown";
 
 const OAUTH_STATE_COOKIE = "google_oauth_state";
 const ALLOWED_GOOGLE_ERRORS = new Set([
@@ -48,15 +49,18 @@ export async function GET(request: Request) {
   cookieStore.delete(OAUTH_STATE_COOKIE);
 
   if (!state || !storedState || state !== storedState) {
+    await startGoogleOAuthConnectCooldown();
     return settingsRedirect(origin, { google_error: "invalid_state" });
   }
 
   if (error) {
+    await startGoogleOAuthConnectCooldown();
     const safeError = ALLOWED_GOOGLE_ERRORS.has(error) ? error : "oauth_failed";
     return settingsRedirect(origin, { google_error: safeError });
   }
 
   if (!code) {
+    await startGoogleOAuthConnectCooldown();
     return settingsRedirect(origin, { google_error: "missing_code" });
   }
 
@@ -76,6 +80,7 @@ export async function GET(request: Request) {
         PLATFORM_SETTING_KEYS.googleRefreshToken
       );
       if (!existing && !process.env.GOOGLE_OAUTH_REFRESH_TOKEN) {
+        await startGoogleOAuthConnectCooldown();
         return settingsRedirect(origin, { google_error: "no_refresh_token" });
       }
     }
@@ -96,8 +101,10 @@ export async function GET(request: Request) {
       }
     }
 
+    await startGoogleOAuthConnectCooldown();
     return settingsRedirect(origin, { google_connected: "1" });
   } catch {
+    await startGoogleOAuthConnectCooldown();
     return settingsRedirect(origin, { google_error: "oauth_failed" });
   }
 }

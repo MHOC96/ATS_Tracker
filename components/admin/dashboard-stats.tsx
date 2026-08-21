@@ -1,29 +1,44 @@
-import type {
-  DashboardStats,
-} from "@/lib/dashboard/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import {
+  Briefcase,
+  CalendarDays,
+  ClipboardCheck,
+  Users,
+} from "lucide-react";
+import type { DashboardStats } from "@/lib/dashboard/queries";
+import { cn } from "@/lib/utils";
 
-type StatCardProps = {
+type StatItem = {
   title: string;
-  value: string | number;
-  description?: string;
+  value: number;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  iconClassName: string;
 };
 
-function StatCard({ title, value, description }: StatCardProps) {
+function StatCard({ title, value, description, href, icon: Icon, iconClassName }: StatItem) {
   return (
-    <Card size="sm" className="bg-obsidian shadow-none border border-graphite">
-      <CardHeader className="pb-1">
-        <CardTitle className="text-[13px] font-normal text-fog">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-center font-mono text-[32px] font-[510] leading-none tracking-tight text-paper sm:text-[40px] lg:text-[48px]">
-          {value}
-        </p>
-        {description && (
-          <p className="mt-1 text-[12px] text-fog">{description}</p>
-        )}
-      </CardContent>
-    </Card>
+    <Link
+      href={href}
+      className={cn(
+        "block rounded-xl bg-carbon p-5",
+        "shadow-[rgb(35,37,42)_0px_0px_0px_1px_inset]",
+        "transition-colors hover:bg-obsidian",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <Icon className={cn("size-4 shrink-0", iconClassName)} strokeWidth={1.75} />
+        <span className="text-[13px] text-fog">{title}</span>
+      </div>
+
+      <p className="mt-4 font-mono text-[32px] font-[510] leading-none tracking-tight text-paper sm:text-[36px]">
+        {value.toLocaleString()}
+      </p>
+
+      <p className="mt-2 text-[12px] leading-snug text-fog">{description}</p>
+    </Link>
   );
 }
 
@@ -32,38 +47,45 @@ type DashboardStatsProps = {
 };
 
 export function DashboardStats({ stats }: DashboardStatsProps) {
-  const items = [
+  const items: StatItem[] = [
     {
-      title: "Active Jobs",
+      title: "Active jobs",
       value: stats.activeJobs,
-      description: "Published vacancies",
+      description: "Open published roles",
+      href: "/admin/jobs",
+      icon: Briefcase,
+      iconClassName: "text-acid-lime",
     },
     {
-      title: "Total Candidates",
+      title: "Total candidates",
       value: stats.totalCandidates,
       description: "All applications",
+      href: "/admin/candidates",
+      icon: Users,
+      iconClassName: "text-iris-violet",
     },
     {
-      title: "Pending Review",
+      title: "Pending review",
       value: stats.pendingReview,
-      description: "AI reviewed or manual review",
+      description: "Need a recruiter decision",
+      href: "/admin/candidates",
+      icon: ClipboardCheck,
+      iconClassName: "text-signal-teal",
     },
     {
       title: "Interviews",
       value: stats.interviews,
-      description: "Scheduled or in progress",
+      description: "In interview stage",
+      href: "/admin/candidates",
+      icon: CalendarDays,
+      iconClassName: "text-pulse-green",
     },
   ];
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {items.map((stat) => (
-        <StatCard
-          key={stat.title}
-          title={stat.title}
-          value={stat.value}
-          description={stat.description}
-        />
+      {items.map((item) => (
+        <StatCard key={item.title} {...item} />
       ))}
     </div>
   );

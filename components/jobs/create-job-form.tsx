@@ -9,8 +9,8 @@ import { createJobDraft, publishJob } from "@/lib/jobs/actions";
 import { generateJobDescription } from "@/lib/jobs/generate-actions";
 import {
   createJobFormSchema,
-  JOB_TYPE_OPTIONS,
 } from "@/lib/validation/job-form";
+import { JobTypeFields } from "@/components/jobs/job-type-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,8 @@ export function CreateJobForm() {
     defaultValues: {
       title: "",
       jobType: "FULL_TIME",
+      hiringPeriodStart: "",
+      hiringPeriodEnd: "",
       description: "",
       responsibilities: "",
       requirements: "",
@@ -181,26 +183,7 @@ export function CreateJobForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Job type</Label>
-            <Select
-              value={form.watch("jobType")}
-              onValueChange={(value) => {
-                if (value) form.setValue("jobType", value as FormValues["jobType"]);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {JOB_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <JobTypeFields form={form} />
 
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="description">Description</Label>

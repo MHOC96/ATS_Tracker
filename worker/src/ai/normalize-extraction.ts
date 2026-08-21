@@ -1,4 +1,5 @@
 import type { CandidateExtraction } from "../schemas.js";
+import { normalizeProfileLinks } from "../schemas.js";
 
 export type ApplyFormHints = {
   fullName?: string | null;
@@ -32,6 +33,7 @@ export function mergeApplyFormHints(
     fullName: data.fullName ?? hints.fullName ?? null,
     email: data.email ?? hints.email ?? null,
     skills: normalizeSkills(data.skills ?? []),
+    profileLinks: normalizeProfileLinks(data.profileLinks ?? []),
   };
 }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { RecentApplicationRow } from "@/lib/dashboard/queries";
+import { formatApplicationStatus } from "@/packages/shared/schemas";
 
 type RecentApplicationsProps = {
   applications: RecentApplicationRow[];
@@ -27,7 +28,7 @@ export function RecentApplications({ applications }: RecentApplicationsProps) {
               <li key={application.id}>
                 <Link
                   href={`/admin/candidates/${application.id}`}
-                  className="flex flex-col gap-2 py-4 transition-colors hover:bg-white/[0.02] -mx-2 px-2 rounded-md sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                  className="flex flex-col gap-2 rounded-md px-2 py-4 transition-colors hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[14px] font-[510] text-paper">
@@ -43,7 +44,9 @@ export function RecentApplications({ applications }: RecentApplicationsProps) {
                         {Math.round(application.score)}%
                       </span>
                     )}
-                    <Badge variant="outline">{application.status}</Badge>
+                    <Badge variant="outline">
+                      {formatApplicationStatus(application.status)}
+                    </Badge>
                   </div>
                 </Link>
               </li>

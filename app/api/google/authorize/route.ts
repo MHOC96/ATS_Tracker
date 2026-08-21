@@ -2,6 +2,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { getSessionUser } from "@/lib/auth/session";
+import {
+  getGoogleOAuthConnectCooldown,
+} from "@/lib/google/oauth-connect-cooldown";
 import { buildGoogleAuthorizeUrl, isOAuthCredentialsConfigured } from "@/lib/google/oauth";
 
 const OAUTH_STATE_COOKIE = "google_oauth_state";
@@ -23,6 +26,16 @@ export async function GET(request: Request) {
   if (!isOAuthCredentialsConfigured()) {
     return NextResponse.redirect(
       new URL("/admin/settings?google_error=missing_oauth_client", request.url)
+    );
+  }
+
+  const cooldown = await getGoogleOAuthConnectCooldown();
+  if (cooldown.remainingSeconds > 0) {
+    return NextResponse.redirect(
+      new URL(
+        `/admin/settings?google_error=oauth_cooldown&retry_after=${cooldown.remainingSeconds}`,
+        request.url
+      )
     );
   }
 

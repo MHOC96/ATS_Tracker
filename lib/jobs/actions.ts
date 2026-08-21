@@ -8,6 +8,7 @@ import {
 } from "@/lib/google/drive";
 import { createClient } from "@/lib/supabase/server";
 import { slugifyJobTitle } from "@/lib/utils/slug";
+import { hiringPeriodDbValues } from "@/lib/jobs/hiring-period";
 import {
   archiveJobSchema,
   closeJobSchema,
@@ -63,6 +64,11 @@ export async function createJobDraft(
     const totalWeight = data.criteria
       .filter((c) => c.criteriaType === "WEIGHT")
       .reduce((sum, c) => sum + c.weight, 0);
+    const hiringPeriod = hiringPeriodDbValues(
+      data.jobType,
+      data.hiringPeriodStart,
+      data.hiringPeriodEnd
+    );
 
     const { data: job, error: jobError } = await supabase
       .from("jobs")
@@ -70,6 +76,8 @@ export async function createJobDraft(
         title: data.title,
         slug,
         job_type: data.jobType,
+        hiring_period_start: hiringPeriod.hiring_period_start,
+        hiring_period_end: hiringPeriod.hiring_period_end,
         description: data.description ?? null,
         responsibilities: data.responsibilities ?? null,
         requirements: data.requirements ?? null,
@@ -265,12 +273,19 @@ export async function updateJob(
     const totalWeight = data.criteria
       .filter((c) => c.criteriaType === "WEIGHT")
       .reduce((sum, c) => sum + c.weight, 0);
+    const hiringPeriod = hiringPeriodDbValues(
+      data.jobType,
+      data.hiringPeriodStart,
+      data.hiringPeriodEnd
+    );
 
     const { error: jobError } = await supabase
       .from("jobs")
       .update({
         title: data.title,
         job_type: data.jobType,
+        hiring_period_start: hiringPeriod.hiring_period_start,
+        hiring_period_end: hiringPeriod.hiring_period_end,
         description: data.description ?? null,
         responsibilities: data.responsibilities ?? null,
         requirements: data.requirements ?? null,
@@ -504,10 +519,10 @@ export async function deleteJob(
       return { success: false, error: "Job not found" };
     }
 
-    if (job.status !== "DRAFT") {
+    if (job.status === "PUBLISHED" || job.status === "CLOSED") {
       return {
         success: false,
-        error: "Only draft jobs can be permanently deleted. Archive published or closed jobs instead.",
+        error: "Archive the job before permanently deleting it.",
       };
     }
 
@@ -520,11 +535,30 @@ export async function deleteJob(
       return { success: false, error: countError.message };
     }
 
-    if (count && count > 0) {
+    if (job.status === "DRAFT") {
+      if (count && count > 0) {
+        return {
+          success: false,
+          error: "Cannot delete a draft job that has applications. Archive it instead.",
+        };
+      }
+    } else if (job.status !== "ARCHIVED") {
       return {
         success: false,
-        error: "Cannot delete a job that has applications. Archive it instead.",
+        error: "Only draft or archived jobs can be permanently deleted.",
       };
+    }
+
+    // Remove applications first so candidate_scores are gone before scoring_models CASCADE.
+    if (count && count > 0) {
+      const { error: applicationsDeleteError } = await supabase
+        .from("candidate_applications")
+        .delete()
+        .eq("job_id", job.id);
+
+      if (applicationsDeleteError) {
+        return { success: false, error: applicationsDeleteError.message };
+      }
     }
 
     const { error: deleteError } = await supabase.from("jobs").delete().eq("id", job.id);
@@ -534,7 +568,9 @@ export async function deleteJob(
     }
 
     revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${job.id}`);
     revalidatePath("/jobs");
+    revalidatePath(`/jobs/${job.slug}`);
 
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
