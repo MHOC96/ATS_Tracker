@@ -1,14 +1,18 @@
 import { after, NextResponse } from "next/server";
+import { requireApiRecruiterOrAdmin } from "@/lib/auth/api";
 import { queueApplicationProcessing } from "@/lib/queue/handoff";
 
 /**
  * API gateway endpoint — queues AI processing on Railway.
- * Long-running Gemini/Groq calls MUST NOT run here (Vercel timeout limits).
+ * Requires an authenticated staff session (admin or recruiter).
  */
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireApiRecruiterOrAdmin();
+  if ("error" in auth) return auth.error;
+
   const { id } = await params;
 
   after(async () => {

@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
+import { getSessionUser } from "@/lib/auth/session";
+import { GOOGLE_OAUTH_STATE_COOKIE } from "@/lib/auth/oauth-state";
 import {
   createOAuth2Client,
   getOAuthRedirectUri,
@@ -11,21 +14,45 @@ import {
   setPlatformSetting,
 } from "@/lib/platform/settings";
 
+function redirectToSettings(
+  origin: string,
+  params: Record<string, string>
+): NextResponse {
+  const url = new URL("/admin/settings", origin);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  const response = NextResponse.redirect(url);
+  response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
+  return response;
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const stateParam = searchParams.get("state");
+
+  const user = await getSessionUser();
+  if (!user || user.role !== "ADMIN") {
+    const loginUrl = new URL("/login", origin);
+    loginUrl.searchParams.set("redirect", "/admin/settings");
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const cookieStore = await cookies();
+  const stateCookie = cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
+
+  if (!stateCookie || !stateParam || stateCookie !== stateParam) {
+    return redirectToSettings(origin, { google_error: "invalid_oauth_state" });
+  }
 
   if (error) {
-    return NextResponse.redirect(
-      `${origin}/admin/settings?google_error=${encodeURIComponent(error)}`
-    );
+    return redirectToSettings(origin, { google_error: error });
   }
 
   if (!code) {
-    return NextResponse.redirect(
-      `${origin}/admin/settings?google_error=missing_code`
-    );
+    return redirectToSettings(origin, { google_error: "missing_code" });
   }
 
   try {
@@ -44,9 +71,7 @@ export async function GET(request: Request) {
         PLATFORM_SETTING_KEYS.googleRefreshToken
       );
       if (!existing && !process.env.GOOGLE_OAUTH_REFRESH_TOKEN) {
-        return NextResponse.redirect(
-          `${origin}/admin/settings?google_error=no_refresh_token`
-        );
+        return redirectToSettings(origin, { google_error: "no_refresh_token" });
       }
     }
 
@@ -66,12 +91,10 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.redirect(`${origin}/admin/settings?google_connected=1`);
+    return redirectToSettings(origin, { google_connected: "1" });
   } catch (callbackError) {
     const message =
       callbackError instanceof Error ? callbackError.message : "oauth_failed";
-    return NextResponse.redirect(
-      `${origin}/admin/settings?google_error=${encodeURIComponent(message)}`
-    );
+    return redirectToSettings(origin, { google_error: message });
   }
 }

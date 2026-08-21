@@ -17,6 +17,12 @@ export async function queueApplicationProcessing(
   const workerUrl = process.env.RAILWAY_WORKER_URL?.replace(/\/$/, "");
   const workerSecret = process.env.WORKER_API_SECRET;
 
+  if (process.env.NODE_ENV === "production" && !workerSecret) {
+    throw new Error(
+      "WORKER_API_SECRET is required in production for worker handoff"
+    );
+  }
+
   if (!workerUrl) {
     return {
       queued: false,

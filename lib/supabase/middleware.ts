@@ -32,8 +32,15 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAdminRoute = pathname.startsWith("/admin");
   const isLoginRoute = pathname.startsWith("/login");
+  const isProtectedApi =
+    pathname.startsWith("/api/applications") ||
+    pathname.startsWith("/api/google");
 
-  if (!user && isAdminRoute) {
+  if (!user && (isAdminRoute || isProtectedApi)) {
+    if (isProtectedApi) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);

@@ -13,12 +13,17 @@ import { runRecruitmentWorkflow } from "./graph/workflow.js";
 const PORT = Number(process.env.PORT ?? 3001);
 const WORKER_SECRET = process.env.WORKER_API_SECRET;
 
+if (process.env.NODE_ENV === "production" && !WORKER_SECRET) {
+  console.error("[worker] WORKER_API_SECRET is required in production");
+  process.exit(1);
+}
+
 const processPayloadSchema = z.object({
   applicationId: z.string().uuid(),
 });
 
 function isAuthorized(req: import("http").IncomingMessage): boolean {
-  if (!WORKER_SECRET) return true;
+  if (!WORKER_SECRET) return process.env.NODE_ENV !== "production";
   const auth = req.headers.authorization;
   return auth === `Bearer ${WORKER_SECRET}`;
 }
