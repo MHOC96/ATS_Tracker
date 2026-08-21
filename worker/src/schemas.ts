@@ -14,8 +14,16 @@ export const candidateExtractionSchema = z.object({
   skills: z.array(z.string()).default([]),
   education: z.array(z.record(z.string(), z.unknown())).default([]),
   experience: z.array(z.record(z.string(), z.unknown())).default([]),
-  certifications: z.array(z.record(z.string(), z.unknown())).default([]),
+  certifications: z
+    .array(z.union([z.string(), z.record(z.string(), z.unknown())]))
+    .default([])
+    .transform((items) =>
+      items.map((item) =>
+        typeof item === "string" ? item.trim() : JSON.stringify(item)
+      ).filter(Boolean)
+    ),
   projects: z.array(z.record(z.string(), z.unknown())).default([]),
+  extractionConfidence: z.number().min(0).max(1).nullable().optional(),
 });
 
 export type CandidateExtraction = z.infer<typeof candidateExtractionSchema>;

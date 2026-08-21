@@ -43,6 +43,14 @@ export const RecruitmentStateAnnotation = Annotation.Root({
     reducer: (_prev, next) => next,
     default: () => null,
   }),
+  applyFormHints: Annotation<{ fullName?: string | null; email?: string | null } | null>({
+    reducer: (_prev, next) => next,
+    default: () => null,
+  }),
+  extractionCorrectionHint: Annotation<string | null>({
+    reducer: (_prev, next) => next,
+    default: () => null,
+  }),
 });
 
 export type RecruitmentState = typeof RecruitmentStateAnnotation.State;
