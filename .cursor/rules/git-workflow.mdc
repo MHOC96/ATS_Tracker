@@ -1,0 +1,18 @@
+---
+description: Branch, PR, and merge workflow for all bug fixes and features
+alwaysApply: true
+---
+
+# Git workflow
+
+For every bug fix or new feature:
+
+1. **Branch** from latest `main`: `fix/...`, `feat/...`, or `chore/...`
+2. **Implement** on that branch only — do not commit directly to `main`
+3. **Push** the branch and **open a pull request** with summary + test plan
+4. **Resolve conflicts** with `main` if CI or review requires it
+5. **Merge via PR** into `main` (squash or merge commit per repo default)
+
+Do not push directly to `main` unless the user explicitly overrides this workflow.
+
+When the user asks to "push" or "ship" a fix, use: branch → commit → push → `gh pr create` → merge PR.
