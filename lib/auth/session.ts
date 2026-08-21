@@ -14,9 +14,10 @@ export const getSessionUser = cache(async (): Promise<AppUser | null> => {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (userError || !user) return null;
 
   const { data: profile } = await supabase
     .from("users")
@@ -24,14 +25,7 @@ export const getSessionUser = cache(async (): Promise<AppUser | null> => {
     .eq("id", user.id)
     .single();
 
-  if (!profile) {
-    return {
-      id: user.id,
-      email: user.email ?? "",
-      fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
-      role: "RECRUITER",
-    };
-  }
+  if (!profile) return null;
 
   return {
     id: profile.id,

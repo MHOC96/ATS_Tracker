@@ -24,7 +24,7 @@ export function CandidatesTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">Applications</CardTitle>
+        <CardTitle>Applications</CardTitle>
       </CardHeader>
       <CardContent>
         {applications.length === 0 ? (
@@ -32,7 +32,7 @@ export function CandidatesTable({
             {emptyMessage}
           </p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-graphite">
             {applications.map((application) => (
               <li
                 key={application.id}
@@ -44,7 +44,7 @@ export function CandidatesTable({
                       <p className="break-words font-medium">
                         {application.candidateName}
                       </p>
-                      <p className="break-words text-sm text-muted-foreground">
+                      <p className="break-all text-sm text-muted-foreground">
                         {application.jobTitle}
                         {application.candidateEmail
                           ? ` · ${application.candidateEmail}`
@@ -59,7 +59,7 @@ export function CandidatesTable({
                       <p className="break-words font-medium">
                         {application.candidateName}
                       </p>
-                      <p className="break-words text-sm text-muted-foreground">
+                      <p className="break-all text-sm text-muted-foreground">
                         {application.jobTitle}
                         {application.candidateEmail
                           ? ` · ${application.candidateEmail}`
@@ -68,18 +68,18 @@ export function CandidatesTable({
                     </Link>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end sm:gap-3">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-3">
                   {application.finalScore !== null && (
                     <span className="font-mono text-sm">
                       {Math.round(application.finalScore)}%
                     </span>
                   )}
                   {application.recommendation && (
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="max-w-full whitespace-normal sm:whitespace-nowrap">
                       {application.recommendation.replace(/_/g, " ")}
                     </Badge>
                   )}
-                  <Badge variant="outline">{application.status}</Badge>
+                  <Badge variant="outline" className="shrink-0">{application.status}</Badge>
                   {showActions && (
                     <ApplicationRowActions
                       applicationId={application.id}

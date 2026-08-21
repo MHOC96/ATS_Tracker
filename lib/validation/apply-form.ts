@@ -28,3 +28,20 @@ export function validateCvFile(file: File): string | null {
 
   return null;
 }
+
+export function validatePdfBuffer(buffer: Buffer): string | null {
+  if (buffer.length < 5) {
+    return "Invalid PDF file";
+  }
+
+  const header = buffer.subarray(0, 5).toString("ascii");
+  if (!header.startsWith("%PDF")) {
+    return "Invalid PDF file";
+  }
+
+  if (buffer.length > MAX_CV_FILE_SIZE_BYTES) {
+    return `CV file must be ${MAX_CV_FILE_SIZE_BYTES / (1024 * 1024)} MB or smaller`;
+  }
+
+  return null;
+}

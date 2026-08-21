@@ -85,7 +85,7 @@ export function CandidateEditForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">Edit candidate</CardTitle>
+        <CardTitle>Edit candidate</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

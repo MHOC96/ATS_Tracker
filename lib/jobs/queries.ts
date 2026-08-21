@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PublicJob = {
@@ -42,7 +43,7 @@ function mapPublicJob(row: {
   };
 }
 
-export async function listPublishedJobs(): Promise<PublicJob[]> {
+async function fetchPublishedJobs(): Promise<PublicJob[]> {
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -56,21 +57,53 @@ export async function listPublishedJobs(): Promise<PublicJob[]> {
   return data.map(mapPublicJob);
 }
 
-export async function getPublishedJobBySlug(
-  slug: string
-): Promise<PublicJob | null> {
-  const supabase = createAdminClient();
+export async function listPublishedJobs(): Promise<PublicJob[]> {
+  return unstable_cache(fetchPublishedJobs, ["published-jobs-list"], {
+    tags: ["jobs"],
+    revalidate: 120,
+  })();
+}
 
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(PUBLIC_JOB_FIELDS)
-    .eq("slug", slug)
-    .eq("status", "PUBLISHED")
-    .maybeSingle();
+export async function getPublishedJobBySlug(slug: string): Promise<PublicJob | null> {
+  return unstable_cache(
+    async () => {
+      const supabase = createAdminClient();
 
-  if (error || !data) return null;
+      const { data, error } = await supabase
+        .from("jobs")
+        .select(PUBLIC_JOB_FIELDS)
+        .eq("slug", slug)
+        .eq("status", "PUBLISHED")
+        .maybeSingle();
 
-  return mapPublicJob(data);
+      if (error || !data) return null;
+
+      return mapPublicJob(data);
+    },
+    ["published-job-by-slug", slug],
+    { tags: ["jobs", `job:${slug}`], revalidate: 120 }
+  )();
+}
+
+/** Cached job row for apply/upload — includes folder id, avoids duplicate fetch. */
+export async function getPublishedJobForApply(slug: string) {
+  return unstable_cache(
+    async () => {
+      const supabase = createAdminClient();
+
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("id, title, status, incoming_folder_id")
+        .eq("slug", slug)
+        .eq("status", "PUBLISHED")
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data;
+    },
+    ["published-job-apply", slug],
+    { tags: ["jobs", `job:${slug}`], revalidate: 120 }
+  )();
 }
 
 export type JobEditData = {

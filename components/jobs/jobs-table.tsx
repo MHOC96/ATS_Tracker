@@ -41,10 +41,10 @@ export async function JobsTable({ canManage = false }: JobsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">All jobs</CardTitle>
+        <CardTitle>All jobs</CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-graphite">
           {jobs.map((job) => {
             const apps = job.candidate_applications as unknown as
               | Array<{ count: number }>
@@ -84,7 +84,7 @@ export async function JobsTable({ canManage = false }: JobsTableProps) {
                     </Link>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <Badge variant="outline" className="w-fit shrink-0">
                     {job.status}
                   </Badge>

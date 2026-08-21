@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { GoogleConnectLink } from "@/components/settings/google-connect-link";
+import { PageTitle } from "@/components/layout/page-title";
 import {
   Card,
   CardContent,
@@ -39,12 +40,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-mono text-xl tracking-tight sm:text-2xl">Settings</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Connect Google Drive once — the app stores the refresh token automatically.
-        </p>
-      </div>
+      <PageTitle
+        title="Settings"
+        description="Connect Google Drive once — the app stores the refresh token automatically."
+      />
 
       {params.google_connected === "1" && (
         <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm">
@@ -114,7 +113,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           <p className="text-xs text-muted-foreground">
             Add{" "}
-            <code className="font-mono">
+            <code className="break-all font-mono text-xs">
               http://localhost:3000/api/google/callback
             </code>{" "}
             to Authorized redirect URIs in Google Cloud Console (not OAuth
