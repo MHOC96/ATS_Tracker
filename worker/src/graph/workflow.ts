@@ -95,5 +95,7 @@ export async function runRecruitmentWorkflow(applicationId: string) {
     scoreResult: null,
     status: "QUEUED",
     error: null,
+    applyFormHints: null,
+    extractionCorrectionHint: null,
   });
 }

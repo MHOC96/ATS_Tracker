@@ -84,9 +84,11 @@ export async function loadApplication(
     archiveFolderId: job?.archive_folder_id ?? "",
     processingStartedAt: Date.now(),
     status: "LOADED",
-    candidateData: {
+    applyFormHints: {
       fullName: candidate?.full_name,
       email: candidate?.email,
     },
+    candidateData: null,
+    extractionCorrectionHint: null,
   };
 }

@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export * from "./cv";
+export * from "./jd";
+
 export const jobTypeSchema = z.enum([
   "FULL_TIME",
   "PART_TIME",

@@ -1,36 +1,33 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { requireGeminiKey, workerConfig } from "../config.js";
+import type { GoogleGenerativeAI } from "@google/generative-ai";
+import { workerConfig } from "../config.js";
 import {
   candidateExtractionSchema,
   type CandidateExtraction,
 } from "../schemas.js";
+import {
+  BASE_EXTRACTION_RULES,
+  CANDIDATE_EXTRACTION_RESPONSE_SCHEMA,
+  EXTRACTION_PROMPT_VERSION,
+} from "./extraction-schema.js";
+import { withGeminiKeyRotation } from "./gemini-keys.js";
+import type { ApplyFormHints } from "./normalize-extraction.js";
+import { mergeApplyFormHints } from "./normalize-extraction.js";
 
-const EXTRACTION_PROMPT = `You are a CV extraction assistant. Extract structured candidate information from the attached CV document.
+export type ExtractionMethod = "pdf_text" | "vision" | "correction";
 
-Rules:
-- Return ONLY valid JSON matching the schema below.
-- Do NOT invent information. Use null for missing fields.
-- Use empty arrays when no items exist.
-- fullName, email, phone, location, university, degree use camelCase keys.
-- yearsExperience and gpa are numbers or null.
-- skills is an array of strings.
+export type ExtractionResult = {
+  data: CandidateExtraction;
+  raw: unknown;
+  method: ExtractionMethod;
+  promptVersion: string;
+  usageMetadata?: Record<string, unknown>;
+};
 
-Schema:
-{
-  "fullName": string | null,
-  "email": string | null,
-  "phone": string | null,
-  "location": string | null,
-  "university": string | null,
-  "degree": string | null,
-  "gpa": number | null,
-  "yearsExperience": number | null,
-  "skills": string[],
-  "education": object[],
-  "experience": object[],
-  "certifications": object[],
-  "projects": object[]
-}`;
+type ExtractionOptions = {
+  hints?: ApplyFormHints | null;
+  correctionHint?: string | null;
+  previousJson?: Record<string, unknown> | null;
+};
 
 function parseJsonResponse(text: string): unknown {
   const trimmed = text.trim();
@@ -39,32 +36,146 @@ function parseJsonResponse(text: string): unknown {
   return JSON.parse(payload);
 }
 
-export async function extractCandidateFromCv(
-  buffer: Buffer,
-  mimeType: string
-): Promise<{ data: CandidateExtraction; raw: unknown }> {
-  const genAI = new GoogleGenerativeAI(requireGeminiKey());
-  const model = genAI.getGenerativeModel({
+function hintsBlock(hints?: ApplyFormHints | null): string {
+  if (!hints?.fullName && !hints?.email) return "";
+  return `\nApply-form hints (use only if missing on CV): ${JSON.stringify(hints)}`;
+}
+
+function buildGenerationConfig() {
+  return {
+    responseMimeType: "application/json",
+    responseSchema: CANDIDATE_EXTRACTION_RESPONSE_SCHEMA,
+    temperature: 0.1,
+  };
+}
+
+async function runGeminiJson(
+  client: GoogleGenerativeAI,
+  parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>
+) {
+  const model = client.getGenerativeModel({
     model: workerConfig.visionModel,
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.1,
-    },
+    generationConfig: buildGenerationConfig(),
   });
 
-  const result = await model.generateContent([
-    { text: EXTRACTION_PROMPT },
-    {
-      inlineData: {
-        mimeType,
-        data: buffer.toString("base64"),
-      },
-    },
-  ]);
-
+  const result = await model.generateContent(parts);
   const text = result.response.text();
   const raw = parseJsonResponse(text);
-  const data = candidateExtractionSchema.parse(raw);
+  const usageMetadata = result.response.usageMetadata as
+    | Record<string, unknown>
+    | undefined;
 
-  return { data, raw };
+  return { raw, usageMetadata };
+}
+
+export async function extractCandidateFromCvText(
+  cvText: string,
+  options: ExtractionOptions = {}
+): Promise<ExtractionResult> {
+  const prompt = `${BASE_EXTRACTION_RULES}
+
+Extract from this CV text:${hintsBlock(options.hints)}
+
+CV TEXT:
+${cvText}`;
+
+  const { raw, usageMetadata } = await withGeminiKeyRotation((client) =>
+    runGeminiJson(client, [{ text: prompt }])
+  );
+
+  const parsed = candidateExtractionSchema.parse(raw);
+  const data = mergeApplyFormHints(parsed, options.hints);
+
+  return {
+    data,
+    raw,
+    method: "pdf_text",
+    promptVersion: EXTRACTION_PROMPT_VERSION,
+    usageMetadata,
+  };
+}
+
+export async function extractCandidateFromCvVision(
+  buffer: Buffer,
+  mimeType: string,
+  options: ExtractionOptions = {}
+): Promise<ExtractionResult> {
+  const prompt = `${BASE_EXTRACTION_RULES}
+
+Extract from the attached CV document.${hintsBlock(options.hints)}`;
+
+  const { raw, usageMetadata } = await withGeminiKeyRotation((client) =>
+    runGeminiJson(client, [
+      { text: prompt },
+      {
+        inlineData: {
+          mimeType,
+          data: buffer.toString("base64"),
+        },
+      },
+    ])
+  );
+
+  const parsed = candidateExtractionSchema.parse(raw);
+  const data = mergeApplyFormHints(parsed, options.hints);
+
+  return {
+    data,
+    raw,
+    method: "vision",
+    promptVersion: EXTRACTION_PROMPT_VERSION,
+    usageMetadata,
+  };
+}
+
+export async function correctCandidateExtractionJson(
+  previousJson: Record<string, unknown>,
+  validationError: string,
+  options: ExtractionOptions = {}
+): Promise<ExtractionResult> {
+  const prompt = `${BASE_EXTRACTION_RULES}
+
+Fix the JSON below. Validation failed: ${validationError}
+Return corrected JSON only. Do not invent fields.${hintsBlock(options.hints)}
+
+PREVIOUS JSON:
+${JSON.stringify(previousJson)}`;
+
+  const { raw, usageMetadata } = await withGeminiKeyRotation((client) =>
+    runGeminiJson(client, [{ text: prompt }])
+  );
+
+  const parsed = candidateExtractionSchema.parse(raw);
+  const data = mergeApplyFormHints(parsed, options.hints);
+
+  return {
+    data,
+    raw,
+    method: "correction",
+    promptVersion: EXTRACTION_PROMPT_VERSION,
+    usageMetadata,
+  };
+}
+
+export async function extractCandidateFromCv(
+  buffer: Buffer,
+  mimeType: string,
+  options: ExtractionOptions & {
+    preparedText?: string | null;
+    useVision?: boolean;
+  } = {}
+): Promise<ExtractionResult> {
+  if (options.correctionHint && options.previousJson) {
+    return correctCandidateExtractionJson(
+      options.previousJson,
+      options.correctionHint,
+      options
+    );
+  }
+
+  if (options.preparedText && !options.useVision) {
+    return extractCandidateFromCvText(options.preparedText, options);
+  }
+
+  return extractCandidateFromCvVision(buffer, mimeType, options);
 }

@@ -7,6 +7,7 @@ import "./load-env.js";
 
 import { createServer } from "http";
 import { z } from "zod";
+import { workerConfig } from "./config.js";
 import { runRecruitmentWorkflow } from "./graph/workflow.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -93,5 +94,8 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[worker] ATS AI worker listening on port ${PORT}`);
+  console.log(
+    `[worker] vision=${workerConfig.visionModel} reasoning=${workerConfig.reasoningModel} geminiKeys=${workerConfig.geminiApiKeyCount}`
+  );
   console.log("[worker] LangGraph workflow ready (Gemini + Groq)");
 });

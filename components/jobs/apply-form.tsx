@@ -61,7 +61,7 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
       <CardHeader>
         <CardTitle className="font-mono text-lg font-normal">Apply for this role</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Submit your details and CV. PDF or image files up to 10 MB.
+          Submit your details and CV. PDF or image files up to 4 MB.
         </p>
       </CardHeader>
       <CardContent>

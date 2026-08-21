@@ -1,18 +1,20 @@
-import { resolveReasoningModel } from "./models.js";
+import { resolveReasoningModel, resolveVisionModel } from "./models.js";
+import { getGeminiApiKeyCount } from "./ai/gemini-keys.js";
 
 export const workerConfig = {
-  visionModel: process.env.VISION_MODEL ?? "gemini-2.0-flash",
+  visionModel: resolveVisionModel(process.env.VISION_MODEL),
   reasoningModel: resolveReasoningModel(process.env.REASONING_MODEL),
-  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
   groqApiKey: process.env.GROQ_API_KEY ?? "",
-  maxExtractionRetries: 1,
+  geminiApiKeyCount: getGeminiApiKeyCount(),
+  maxExtractionRetries: Number(process.env.MAX_AI_RETRIES ?? 2),
 } as const;
 
-export function requireGeminiKey(): string {
-  if (!workerConfig.geminiApiKey) {
-    throw new Error("GEMINI_API_KEY is not configured");
+export function assertGeminiConfigured(): void {
+  if (workerConfig.geminiApiKeyCount === 0) {
+    throw new Error(
+      "GEMINI_API_KEY or GEMINI_API_KEYS is not configured for the worker"
+    );
   }
-  return workerConfig.geminiApiKey;
 }
 
 export function requireGroqKey(): string {
