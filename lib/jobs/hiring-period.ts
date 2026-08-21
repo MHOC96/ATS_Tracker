@@ -37,7 +37,7 @@ export function formatHiringPeriod(
   return `Until ${format(end!)}`;
 }
 
-export function getHiringPeriodLabel(jobType: JobType): string {
+export function getHiringPeriodLabel(jobType: JobType | string): string {
   switch (jobType) {
     case "INTERNSHIP":
       return "Internship period";

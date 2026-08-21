@@ -1,11 +1,15 @@
 import { unstable_cache } from "next/cache";
+import type { z } from "zod";
+import { jobTypeSchema } from "@/packages/shared/schemas/job-types";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+export type JobType = z.infer<typeof jobTypeSchema>;
 
 export type PublicJob = {
   id: string;
   title: string;
   slug: string;
-  jobType: string;
+  jobType: JobType;
   hiringPeriodStart: string | null;
   hiringPeriodEnd: string | null;
   description: string | null;
@@ -37,7 +41,7 @@ function mapPublicJob(row: {
     id: row.id,
     title: row.title,
     slug: row.slug,
-    jobType: row.job_type,
+    jobType: row.job_type as JobType,
     hiringPeriodStart: row.hiring_period_start,
     hiringPeriodEnd: row.hiring_period_end,
     description: row.description,
