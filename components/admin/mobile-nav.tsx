@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { adminNavItems } from "@/lib/constants/navigation";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -28,11 +28,14 @@ export function AdminMobileNav({ userRole }: AdminMobileNavProps) {
 
   return (
     <Sheet>
-      <SheetTrigger className="lg:hidden">
-        <Button variant="ghost" size="icon">
-          <Menu className="size-5" />
-          <span className="sr-only">Open navigation</span>
-        </Button>
+      <SheetTrigger
+        className={cn(
+          buttonVariants({ variant: "ghost", size: "icon" }),
+          "lg:hidden"
+        )}
+      >
+        <Menu className="size-5" />
+        <span className="sr-only">Open navigation</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
         <SheetHeader className="border-b border-border px-6 py-4">
