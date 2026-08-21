@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { uploadFileToDriveFolder } from "@/lib/google/drive";
 import { scheduleApplicationProcessing } from "@/lib/queue/handoff";
 
-type JobRow = {
+export type ApplicationJobRow = {
   id: string;
   title: string;
   status: string;
@@ -25,19 +25,26 @@ export async function createApplicationWithCv(
   jobId: string,
   fullName: string | null,
   email: string | null,
-  file: CvFileInput
+  file: CvFileInput,
+  preloadedJob?: ApplicationJobRow
 ): Promise<CreateApplicationResult> {
-  const { data: job, error: jobError } = await supabase
-    .from("jobs")
-    .select("id, title, status, incoming_folder_id")
-    .eq("id", jobId)
-    .single();
+  let typedJob: ApplicationJobRow;
 
-  if (jobError || !job) {
-    return { success: false, error: "Job not found" };
+  if (preloadedJob && preloadedJob.id === jobId) {
+    typedJob = preloadedJob;
+  } else {
+    const { data: job, error: jobError } = await supabase
+      .from("jobs")
+      .select("id, title, status, incoming_folder_id")
+      .eq("id", jobId)
+      .single();
+
+    if (jobError || !job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    typedJob = job as ApplicationJobRow;
   }
-
-  const typedJob = job as JobRow;
 
   if (typedJob.status !== "PUBLISHED") {
     return { success: false, error: "This job is not accepting applications" };

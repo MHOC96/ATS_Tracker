@@ -73,7 +73,6 @@ export async function saveAdminDecision(
     revalidatePath("/admin/candidates");
     revalidatePath(`/admin/candidates/${applicationId}`);
     revalidatePath("/admin/manual-review");
-    revalidatePath("/admin");
 
     return { success: true };
   } catch (error) {
@@ -147,7 +146,6 @@ export async function updateCandidate(
     revalidatePath("/admin/candidates");
     revalidatePath(`/admin/candidates/${applicationId}`);
     revalidatePath("/admin/manual-review");
-    revalidatePath("/admin");
 
     return { success: true };
   } catch (error) {
@@ -189,7 +187,6 @@ export async function deleteCandidateApplication(
     revalidatePath("/admin/candidates");
     revalidatePath("/admin/manual-review");
     revalidatePath("/admin/jobs");
-    revalidatePath("/admin");
 
     return { success: true };
   } catch (error) {

@@ -75,7 +75,7 @@ export async function getRecentApplications(
       applied_at,
       candidates(full_name),
       jobs(title),
-      candidate_scores(final_score)
+      candidate_scores(final_score, created_at)
     `
     )
     .order("applied_at", { ascending: false })
@@ -89,12 +89,17 @@ export async function getRecentApplications(
     } | null;
     const job = row.jobs as unknown as { title: string } | null;
     const scores = row.candidate_scores as unknown as
-      | Array<{ final_score: number }>
-      | { final_score: number }
+      | Array<{ final_score: number; created_at?: string }>
+      | { final_score: number; created_at?: string }
       | null;
 
     const scoreList = Array.isArray(scores) ? scores : scores ? [scores] : [];
-    const latestScore = scoreList[0]?.final_score ?? null;
+    const latestScore =
+      scoreList.sort(
+        (a, b) =>
+          new Date(b.created_at ?? 0).getTime() -
+          new Date(a.created_at ?? 0).getTime()
+      )[0]?.final_score ?? null;
 
     return {
       id: row.id,

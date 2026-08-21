@@ -1,8 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createApplicationWithCv } from "@/lib/applications/process-application";
-import { getPublishedJobBySlug } from "@/lib/jobs/queries";
+import { getPublishedJobForApply } from "@/lib/jobs/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   publicApplySchema,
@@ -18,7 +17,7 @@ export async function applyToJobBySlug(
   formData: FormData
 ): Promise<ApplyResult> {
   try {
-    const job = await getPublishedJobBySlug(slug);
+    const job = await getPublishedJobForApply(slug);
 
     if (!job) {
       return { success: false, error: "Job not found or no longer open" };
@@ -60,16 +59,9 @@ export async function applyToJobBySlug(
         type: file.type || "application/octet-stream",
         size: file.size,
         buffer,
-      }
+      },
+      job
     );
-
-    if (result.success) {
-      revalidatePath("/jobs");
-      revalidatePath(`/jobs/${slug}`);
-      revalidatePath("/admin");
-      revalidatePath("/admin/candidates");
-      revalidatePath(`/admin/jobs/${job.id}`);
-    }
 
     return result;
   } catch (error) {

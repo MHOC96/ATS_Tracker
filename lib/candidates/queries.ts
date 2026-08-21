@@ -83,7 +83,7 @@ export async function listCandidateApplications(
       job_id,
       candidates(id, full_name, email),
       jobs(id, title),
-      candidate_scores(final_score, recommendation)
+      candidate_scores(final_score, recommendation, created_at)
     `
     )
     .order("applied_at", { ascending: false })
@@ -109,7 +109,11 @@ export async function listCandidateApplications(
       | null;
 
     const scoreList = Array.isArray(scores) ? scores : scores ? [scores] : [];
-    const latest = scoreList[0];
+    const latest = scoreList.sort(
+      (a, b) =>
+        new Date((b as { created_at?: string }).created_at ?? 0).getTime() -
+        new Date((a as { created_at?: string }).created_at ?? 0).getTime()
+    )[0] as { final_score: number; recommendation: string } | undefined;
 
     return {
       id: row.id,
@@ -161,6 +165,7 @@ export async function getCandidateApplicationDetail(
         missing_skills,
         mandatory_failures,
         reasoning,
+        created_at,
         criterion_scores(
           id,
           score,
@@ -221,6 +226,7 @@ export async function getCandidateApplicationDetail(
         missing_skills: string[] | null;
         mandatory_failures: string[] | null;
         reasoning: string | null;
+        created_at: string;
         criterion_scores: Array<{
           id: string;
           score: number;
@@ -231,7 +237,11 @@ export async function getCandidateApplicationDetail(
       }>
     | null;
 
-  const scoreRow = scores?.[0] ?? null;
+  const scoreRow =
+    scores?.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0] ?? null;
 
   const decisions = application.admin_decisions as unknown as
     | Array<{ decision: string; notes: string | null; created_at: string }>

@@ -13,10 +13,12 @@ export const getSessionUser = cache(async (): Promise<AppUser | null> => {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
 
-  if (!user) return null;
+  const user = session?.user;
+  if (sessionError || !user) return null;
 
   const { data: profile } = await supabase
     .from("users")

@@ -3,6 +3,8 @@
  * Next.js / Vercel -> Queue -> Railway Worker -> Gemini + Groq -> Supabase
  */
 
+import { after } from "next/server";
+
 const HANDOFF_TIMEOUT_MS = 5000;
 
 type QueueResult = {
@@ -16,6 +18,12 @@ export async function queueApplicationProcessing(
 ): Promise<QueueResult> {
   const workerUrl = process.env.RAILWAY_WORKER_URL?.replace(/\/$/, "");
   const workerSecret = process.env.WORKER_API_SECRET;
+
+  if (process.env.NODE_ENV === "production" && !workerSecret) {
+    throw new Error(
+      "WORKER_API_SECRET is required in production for worker handoff"
+    );
+  }
 
   if (!workerUrl) {
     return {
@@ -61,12 +69,14 @@ export async function queueApplicationProcessing(
   }
 }
 
-/** Fire-and-forget handoff — does not block the caller on Railway latency. */
+/** Schedules worker handoff after the response using Next.js after(). */
 export function scheduleApplicationProcessing(applicationId: string): void {
-  void queueApplicationProcessing(applicationId).catch((error) => {
-    console.error(
-      `[queue] handoff failed for application ${applicationId}:`,
-      error instanceof Error ? error.message : error
-    );
+  after(() => {
+    queueApplicationProcessing(applicationId).catch((error) => {
+      console.error(
+        `[queue] handoff failed for application ${applicationId}:`,
+        error instanceof Error ? error.message : error
+      );
+    });
   });
 }

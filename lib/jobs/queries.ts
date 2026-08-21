@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PublicJob = {
@@ -42,7 +43,7 @@ function mapPublicJob(row: {
   };
 }
 
-export async function listPublishedJobs(): Promise<PublicJob[]> {
+export const listPublishedJobs = cache(async (): Promise<PublicJob[]> => {
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -54,11 +55,11 @@ export async function listPublishedJobs(): Promise<PublicJob[]> {
   if (error || !data) return [];
 
   return data.map(mapPublicJob);
-}
+});
 
-export async function getPublishedJobBySlug(
+export const getPublishedJobBySlug = cache(async (
   slug: string
-): Promise<PublicJob | null> {
+): Promise<PublicJob | null> => {
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -71,7 +72,22 @@ export async function getPublishedJobBySlug(
   if (error || !data) return null;
 
   return mapPublicJob(data);
-}
+});
+
+/** Cached job row for apply/upload — includes folder id, avoids duplicate fetch. */
+export const getPublishedJobForApply = cache(async (slug: string) => {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id, title, status, incoming_folder_id")
+    .eq("slug", slug)
+    .eq("status", "PUBLISHED")
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+});
 
 export type JobEditData = {
   id: string;
