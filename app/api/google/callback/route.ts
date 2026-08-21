@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   createOAuth2Client,
   getOAuthRedirectUri,
@@ -11,21 +13,51 @@ import {
   setPlatformSetting,
 } from "@/lib/platform/settings";
 
+const OAUTH_STATE_COOKIE = "google_oauth_state";
+const ALLOWED_GOOGLE_ERRORS = new Set([
+  "access_denied",
+  "missing_code",
+  "invalid_state",
+  "unauthorized",
+  "no_refresh_token",
+  "missing_oauth_client",
+  "oauth_failed",
+]);
+
+function settingsRedirect(origin: string, params: Record<string, string>) {
+  const url = new URL("/admin/settings", origin);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  return NextResponse.redirect(url);
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const state = searchParams.get("state");
+
+  const user = await getSessionUser();
+  if (!user || user.role !== "ADMIN") {
+    return settingsRedirect(origin, { google_error: "unauthorized" });
+  }
+
+  const cookieStore = await cookies();
+  const storedState = cookieStore.get(OAUTH_STATE_COOKIE)?.value;
+  cookieStore.delete(OAUTH_STATE_COOKIE);
+
+  if (!state || !storedState || state !== storedState) {
+    return settingsRedirect(origin, { google_error: "invalid_state" });
+  }
 
   if (error) {
-    return NextResponse.redirect(
-      `${origin}/admin/settings?google_error=${encodeURIComponent(error)}`
-    );
+    const safeError = ALLOWED_GOOGLE_ERRORS.has(error) ? error : "oauth_failed";
+    return settingsRedirect(origin, { google_error: safeError });
   }
 
   if (!code) {
-    return NextResponse.redirect(
-      `${origin}/admin/settings?google_error=missing_code`
-    );
+    return settingsRedirect(origin, { google_error: "missing_code" });
   }
 
   try {
@@ -44,9 +76,7 @@ export async function GET(request: Request) {
         PLATFORM_SETTING_KEYS.googleRefreshToken
       );
       if (!existing && !process.env.GOOGLE_OAUTH_REFRESH_TOKEN) {
-        return NextResponse.redirect(
-          `${origin}/admin/settings?google_error=no_refresh_token`
-        );
+        return settingsRedirect(origin, { google_error: "no_refresh_token" });
       }
     }
 
@@ -66,12 +96,8 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.redirect(`${origin}/admin/settings?google_connected=1`);
-  } catch (callbackError) {
-    const message =
-      callbackError instanceof Error ? callbackError.message : "oauth_failed";
-    return NextResponse.redirect(
-      `${origin}/admin/settings?google_error=${encodeURIComponent(message)}`
-    );
+    return settingsRedirect(origin, { google_connected: "1" });
+  } catch {
+    return settingsRedirect(origin, { google_error: "oauth_failed" });
   }
 }

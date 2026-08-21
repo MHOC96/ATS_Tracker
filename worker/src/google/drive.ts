@@ -1,4 +1,36 @@
+import { Readable } from "stream";
 import { getDriveClient } from "./oauth.js";
+
+export async function uploadFileToDriveFolder(
+  folderId: string,
+  fileName: string,
+  mimeType: string,
+  buffer: Buffer
+) {
+  const drive = await getDriveClient();
+
+  const response = await drive.files.create({
+    requestBody: {
+      name: fileName,
+      parents: [folderId],
+    },
+    media: {
+      mimeType,
+      body: Readable.from(buffer),
+    },
+    fields: "id, webViewLink",
+    supportsAllDrives: true,
+  });
+
+  if (!response.data.id) {
+    throw new Error("Failed to upload file to Google Drive");
+  }
+
+  return {
+    driveFileId: response.data.id,
+    driveFileUrl: response.data.webViewLink ?? null,
+  };
+}
 
 export async function downloadDriveFile(fileId: string) {
   const drive = await getDriveClient();

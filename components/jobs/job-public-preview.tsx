@@ -11,17 +11,17 @@ export function JobPublicPreview({ job, isDraft = false }: JobPublicPreviewProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">
+        <CardTitle>
           Public preview
         </CardTitle>
         {isDraft && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-fog">
             This is how candidates will see the role after publish. Scoring and
             internal fields are never shown publicly.
           </p>
         )}
       </CardHeader>
-      <CardContent className="rounded-md border border-dashed border-border p-4">
+      <CardContent className="rounded-lg border border-dashed border-graphite p-4 bg-void/50">
         <JobPublicView job={job} />
       </CardContent>
     </Card>

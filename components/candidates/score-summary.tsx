@@ -24,7 +24,7 @@ export function ScoreSummary({ score }: ScoreSummaryProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-mono text-lg font-normal">AI screening</CardTitle>
+          <CardTitle>AI screening</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -91,7 +91,7 @@ export function ScoreSummary({ score }: ScoreSummaryProps) {
       {score.criterionScores.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-mono text-lg font-normal">
+            <CardTitle>
               Criterion breakdown
             </CardTitle>
           </CardHeader>

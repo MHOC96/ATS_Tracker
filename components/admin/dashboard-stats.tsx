@@ -1,6 +1,5 @@
 import type {
   DashboardStats,
-  RecentApplicationRow,
 } from "@/lib/dashboard/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,16 +11,16 @@ type StatCardProps = {
 
 function StatCard({ title, value, description }: StatCardProps) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-normal text-muted-foreground">
-          {title}
-        </CardTitle>
+    <Card size="sm" className="bg-obsidian shadow-none border border-graphite">
+      <CardHeader className="pb-1">
+        <CardTitle className="text-[13px] font-normal text-fog">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="font-mono text-3xl tracking-tight">{value}</p>
+        <p className="text-center font-mono text-[32px] font-[510] leading-none tracking-tight text-paper sm:text-[40px] lg:text-[48px]">
+          {value}
+        </p>
         {description && (
-          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-1 text-[12px] text-fog">{description}</p>
         )}
       </CardContent>
     </Card>
@@ -57,7 +56,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((stat) => (
         <StatCard
           key={stat.title}

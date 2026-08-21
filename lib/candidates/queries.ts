@@ -82,8 +82,7 @@ export async function listCandidateApplications(
       applied_at,
       job_id,
       candidates(id, full_name, email),
-      jobs(id, title),
-      candidate_scores(final_score, recommendation, created_at)
+      jobs(id, title)
     `
     )
     .order("applied_at", { ascending: false })
@@ -97,23 +96,23 @@ export async function listCandidateApplications(
 
   if (error || !data) return [];
 
+  const applicationIds = data.map((row) => row.id);
+  const { data: scoreRows } = await supabase
+    .from("latest_candidate_scores")
+    .select("candidate_application_id, final_score, recommendation")
+    .in("candidate_application_id", applicationIds);
+
+  const scoreByApplication = new Map(
+    (scoreRows ?? []).map((score) => [score.candidate_application_id, score])
+  );
+
   return data.map((row) => {
     const candidate = row.candidates as unknown as {
       full_name: string | null;
       email: string | null;
     } | null;
     const job = row.jobs as unknown as { id: string; title: string } | null;
-    const scores = row.candidate_scores as unknown as
-      | Array<{ final_score: number; recommendation: string }>
-      | { final_score: number; recommendation: string }
-      | null;
-
-    const scoreList = Array.isArray(scores) ? scores : scores ? [scores] : [];
-    const latest = scoreList.sort(
-      (a, b) =>
-        new Date((b as { created_at?: string }).created_at ?? 0).getTime() -
-        new Date((a as { created_at?: string }).created_at ?? 0).getTime()
-    )[0] as { final_score: number; recommendation: string } | undefined;
+    const latest = scoreByApplication.get(row.id);
 
     return {
       id: row.id,
@@ -156,31 +155,56 @@ export async function getCandidateApplicationDetail(
           skills
         )
       ),
-      jobs(id, title, slug),
-      candidate_scores(
-        id,
-        final_score,
-        recommendation,
-        matched_skills,
-        missing_skills,
-        mandatory_failures,
-        reasoning,
-        created_at,
-        criterion_scores(
-          id,
-          score,
-          maximum_score,
-          reasoning,
-          scoring_criteria(name, weight)
-        )
-      ),
-      admin_decisions(decision, notes, created_at)
+      jobs(id, title, slug)
     `
     )
     .eq("id", applicationId)
     .single();
 
   if (error || !application) return null;
+
+  const [{ data: latestScore }, { data: latestDecision }] = await Promise.all([
+    supabase
+      .from("latest_candidate_scores")
+      .select(
+        "id, final_score, recommendation, matched_skills, missing_skills, mandatory_failures, reasoning"
+      )
+      .eq("candidate_application_id", applicationId)
+      .maybeSingle(),
+    supabase
+      .from("admin_decisions")
+      .select("decision, notes, created_at")
+      .eq("candidate_application_id", applicationId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  let criterionScores: CriterionScoreRow[] = [];
+  if (latestScore?.id) {
+    const { data: criterionRows } = await supabase
+      .from("criterion_scores")
+      .select(
+        "id, score, maximum_score, reasoning, scoring_criteria(name, weight)"
+      )
+      .eq("candidate_score_id", latestScore.id);
+
+    criterionScores = (criterionRows ?? []).map((row) => {
+      const criteria = row.scoring_criteria as unknown as {
+        name: string;
+        weight: number;
+      } | null;
+
+      return {
+        id: row.id,
+        score: Number(row.score),
+        maximumScore: Number(row.maximum_score),
+        reasoning: row.reasoning,
+        criterionName: criteria?.name ?? "Criterion",
+        criterionWeight: Number(criteria?.weight ?? 0),
+      };
+    });
+  }
 
   const candidate = application.candidates as unknown as {
     id: string;
@@ -217,47 +241,6 @@ export async function getCandidateApplicationDetail(
     ? profileSource[0]
     : profileSource;
 
-  const scores = application.candidate_scores as unknown as
-    | Array<{
-        id: string;
-        final_score: number;
-        recommendation: string;
-        matched_skills: string[] | null;
-        missing_skills: string[] | null;
-        mandatory_failures: string[] | null;
-        reasoning: string | null;
-        created_at: string;
-        criterion_scores: Array<{
-          id: string;
-          score: number;
-          maximum_score: number;
-          reasoning: string | null;
-          scoring_criteria: { name: string; weight: number } | null;
-        }> | null;
-      }>
-    | null;
-
-  const scoreRow =
-    scores?.sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )[0] ?? null;
-
-  const decisions = application.admin_decisions as unknown as
-    | Array<{ decision: string; notes: string | null; created_at: string }>
-    | { decision: string; notes: string | null; created_at: string }
-    | null;
-
-  const decisionList = Array.isArray(decisions)
-    ? decisions
-    : decisions
-      ? [decisions]
-      : [];
-
-  const latestDecision = decisionList.sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )[0];
-
   return {
     id: application.id,
     status: application.status,
@@ -287,23 +270,16 @@ export async function getCandidateApplicationDetail(
           skills: profileRow.skills ?? [],
         }
       : null,
-    score: scoreRow
+    score: latestScore
       ? {
-          id: scoreRow.id,
-          finalScore: Number(scoreRow.final_score),
-          recommendation: scoreRow.recommendation,
-          matchedSkills: scoreRow.matched_skills ?? [],
-          missingSkills: scoreRow.missing_skills ?? [],
-          mandatoryFailures: scoreRow.mandatory_failures ?? [],
-          reasoning: scoreRow.reasoning,
-          criterionScores: (scoreRow.criterion_scores ?? []).map((row) => ({
-            id: row.id,
-            score: Number(row.score),
-            maximumScore: Number(row.maximum_score),
-            reasoning: row.reasoning,
-            criterionName: row.scoring_criteria?.name ?? "Criterion",
-            criterionWeight: Number(row.scoring_criteria?.weight ?? 0),
-          })),
+          id: latestScore.id,
+          finalScore: Number(latestScore.final_score),
+          recommendation: latestScore.recommendation,
+          matchedSkills: latestScore.matched_skills ?? [],
+          missingSkills: latestScore.missing_skills ?? [],
+          mandatoryFailures: latestScore.mandatory_failures ?? [],
+          reasoning: latestScore.reasoning,
+          criterionScores,
         }
       : null,
     latestDecision: latestDecision

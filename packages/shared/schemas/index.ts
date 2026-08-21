@@ -1,22 +1,8 @@
 import { z } from "zod";
 
-export * from "./cv";
-export * from "./jd";
+import { jobTypeSchema } from "./job-types";
 
-export const jobTypeSchema = z.enum([
-  "FULL_TIME",
-  "PART_TIME",
-  "INTERNSHIP",
-  "CONTRACT",
-  "TEMPORARY",
-]);
-
-export const jobStatusSchema = z.enum([
-  "DRAFT",
-  "PUBLISHED",
-  "CLOSED",
-  "ARCHIVED",
-]);
+export { jobStatusSchema, jobTypeSchema } from "./job-types";
 
 export const applicationStatusSchema = z.enum([
   "APPLIED",
@@ -89,3 +75,7 @@ export const candidateExtractionSchema = z.object({
 export const queueProcessingSchema = z.object({
   applicationId: z.string().uuid(),
 });
+
+// Re-export submodules after local schemas are initialized (avoids circular import with jd.ts).
+export * from "./cv";
+export * from "./jd";

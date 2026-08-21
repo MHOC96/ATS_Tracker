@@ -1,468 +1,478 @@
-Design System Analysis
+# Linear — Style Reference
+> midnight precision instrument
 
-name: ATS
-colors:
-  primary: '#171717'
-  primary-text: '#ffffff'
-  secondary: '#ffffff'
-  secondary-text: '#171717'
-  background: '#ffffff'
-  surface: '#fafafa'
-  text-primary: '#171717'
-  text-secondary: '#4d4d4d'
-  text-muted: '#666666'
-  border: '#ebebeb'
-  accent: '#0070f3'
-  dark-surface: '#171717'
-  dark-text: '#ffffff'
-typography:
-  display:
-    family: 'Geist Mono'
-    size: 48px
-    weight: 400
-    line-height: 1.2
-  heading:
-    family: 'Geist Mono'
-    size: 32px
-    weight: 400
-    line-height: 1.2
-  body:
-    family: 'Geist'
-    size: 14px
-    weight: 400
-    line-height: 1.5
-  code:
-    family: 'Geist Mono'
-    size: 14px
-    weight: 400
-    line-height: 1.5
-spacing:
-  base: 4px
-  scale: [4, 8, 12, 16, 24, 32, 40, 48, 64]
-radius:
-  sm: 4px
-  md: 6px
-  full: 9999px
-elevation:
-  card: '0 0 0 1px #ebebeb, 0px 1px 2px 0px rgba(0, 0, 0, 0.05)'
-  hover: '0 0 0 1px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.08) (inferred from screenshot)'
-  popover: '0 4px 4px 0 rgba(0, 0, 0, 0.05)'
-  focus: '0 0 0 2px #ffffff, 0 0 0 4px #0070f3'
-components:
-  button-primary:
-    bg: '{colors.primary}'
-    text: '{colors.primary-text}'
-    radius: '{radius.md}'
-    padding: '8px 14px'
-    border: '1px solid {colors.primary}'
-  card:
-    bg: '{colors.background}'
-    radius: '{radius.md}'
-    shadow: '{elevation.card}'
-    padding: '24px'
----
+**Theme:** dark
 
-## 1. Visual Theme & Atmosphere
-ATS's design system projects precision and performance, built on a stark monochrome foundation of `#171717` (black) and `#ffffff` (white). This high-contrast world is softened by subtle background grids and a signature hero element: a vibrant, soft-focus gradient, often transitioning from orange to a teal green (inferred from screenshot). The typography is a key differentiator, pairing the technical, clean lines of `Geist Mono` for all headings with the highly legible sans-serif `Geist` for body copy. This dual-font approach establishes a clear, developer-centric voice that is both authoritative and modern.
+Linear's design system is a midnight command center built on near-black surfaces (#08090a) with paper-white type and one electric acid-lime accent (#e4f222) that functions as a functional flashlight — small, high-contrast, and used sparingly to signal action. The interface treats darkness as a substrate rather than a theme: text is crisp white at tight tracking (-0.022em), weights sit in a low 400–510 band rather than bold, and borders are hairline-thin (0.5px) to let geometry do the work that shadows usually would. Components feel precision-machined — 6px and 12px radii, compact 8–12px paddings, and almost no decorative ornament — letting the product UI (issue cards, kanban boards, AI agent panels) be the only visual texture in an otherwise quiet system.
 
-The system's geometry is defined by sharp `6px` corner radii on interactive elements and containers, contrasted with fully-rounded `9999px` "pill" shapes for standalone calls-to-action. While the overall aesthetic is minimalist, it avoids feeling sterile through these careful typographic choices, subtle shadows, and the burst of color in its hero gradients. Micro-interactions are handled with quick, non-intrusive CSS transitions, typically around `200ms`, reinforcing the platform's focus on speed.
 
-**Key Characteristics:**
-*   **Monochrome Core:** A strict palette of `#171717` black, `#ffffff` white, and grays like `#4d4d4d`.
-*   **Dual-Font System:** `Geist Mono` for headings and `Geist` for body text.
-*   **Geometric Precision:** A subtle background grid and sharp `6px` radii on UI elements.
-*   **Gradient Accents:** Soft, vibrant gradients provide the primary visual flourish in hero sections.
-*   **Pill & Rectangle UI:** A mix of sharp `6px` rectangles and fully-rounded `9999px` pill buttons.
-*   **Subtle Depth:** Elevation is achieved through fine 1px borders and soft, minimal box-shadows.
-*   **Minimalist Iconography:** Line-based, monochrome icons with a consistent stroke weight.
 
-## 2. Color Palette & Roles
+## Tokens — Colors
 
-### Primary
-*   **Primary (`#171717`)**: The core brand black. Used for primary buttons, dark backgrounds, and headline text.
-*   **Primary Text (`#ffffff`)**: Pure white, used as text color on primary (`#171717`) backgrounds for maximum contrast.
+| Name | Value | Token | Role |
+|------|-------|-------|------|
+| Void | `#08090a` | `--color-void` | Page canvas, full-bleed backgrounds — the default everything sits on |
+| Carbon | `#0f1011` | `--color-carbon` | Card surfaces, nav bars — one step above canvas for contained content |
+| Obsidian | `#161718` | `--color-obsidian` | Elevated surfaces, deeper card panels |
+| Graphite | `#23252a` | `--color-graphite` | Subtle borders, dividers, ghost button outlines — low-contrast structural edges |
+| Smoke | `#383b3f` | `--color-smoke` | Hairline borders at higher contrast than graphite — section separators |
+| Ash | `#62666d` | `--color-ash` | Muted body text, inactive icons, secondary metadata |
+| Fog | `#8a8f98` | `--color-fog` | Tertiary text, placeholder copy, icon fills |
+| Mist | `#d0d6e0` | `--color-mist` | Secondary headings, button text on dark surfaces |
+| Bone | `#e5e5e6` | `--color-bone` | Near-white surface fills, high-contrast button text |
+| Paper | `#ffffff` | `--color-paper` | Primary headings, hero type, max-contrast emphasis text |
+| Acid Lime | `#e4f222` | `--color-acid-lime` | Primary action buttons, active nav indicators — electric accent that breaks the monochrome system |
+| Pulse Green | `#27a644` | `--color-pulse-green` | Green outline accent for tags, dividers, and focused UI edges. Use as a supporting accent, not as a status color |
+| Coral Red | `#eb5757` | `--color-coral-red` | Red wash for highlight backgrounds, decorative bands, and soft emphasis behind content. Use as a supporting accent, not as a status color |
+| Signal Teal | `#02b8cc` | `--color-signal-teal` | Decorative accent, informational icon fills |
+| Iris Violet | `#6366f1` | `--color-iris-violet` | Tag/badge fills — soft chromatic punctuation on tags and labels |
+| Lavender | `#8b5cf6` | `--color-lavender` | Secondary tag fills, category indicators |
 
-### Neutral Scale
-*   **Background (`#ffffff`)**: The default page background, providing a bright and clean canvas.
-*   **Surface (`#fafafa`)**: A slightly off-white used for subtle differentiation in page sections or card backgrounds.
-*   **Text Primary (`#171717`)**: The primary text color for headlines and important copy on light backgrounds.
-*   **Text Secondary (`#4d4d4d`)**: The standard for all body copy, offering high but comfortable readability.
-*   **Text Muted (`#666666`)**: Used for secondary information, captions, and disabled states.
+## Tokens — Typography
 
-### Surface & Borders
-*   **Border (`#ebebeb`)**: The primary border color, derived from `rgb(235, 235, 235)`. Used for inputs, cards, and subtle dividers.
+### Inter Variable — Primary UI and heading typeface — used across nav, body, headings, buttons, cards · `--font-inter-variable`
+- **Substitute:** Inter (variable), or system-ui as fallback
+- **Weights:** 300, 400, 510, 590
+- **Sizes:** 10, 11, 12, 13, 14, 15, 16, 17, 20, 24, 32, 48, 64, 72
+- **Line height:** 1.0–2.75
+- **Letter spacing:** -0.022em at 48–72px, -0.012em at 20–32px, -0.011em at 15px, -0.010em at 13–16px
+- **OpenType features:** `"cv01" on, "ss03" on, "zero" on`
+- **Role:** Primary UI and heading typeface — used across nav, body, headings, buttons, cards
 
-### Accent
-*   **Accent (`#0070f3`)**: A vibrant blue used for status indicators, focus rings, and occasional text links.
-*   **Link (`#0068d6`)**: The default color for inline text links, a slightly darker shade of the primary accent.
+### Berkeley Mono — Code-adjacent UI text — issue IDs (ENG-2703), keyboard shortcuts, monospaced metadata · `--font-berkeley-mono`
+- **Substitute:** JetBrains Mono, IBM Plex Mono, or ui-monospace
+- **Weights:** 400
+- **Sizes:** 12, 14
+- **Line height:** 1.40–1.71
+- **Letter spacing:** -0.013em
+- **OpenType features:** `"cv01" on, "ss03" on`
+- **Role:** Code-adjacent UI text — issue IDs (ENG-2703), keyboard shortcuts, monospaced metadata
 
-## 3. Typography Rules
+### Type Scale
 
-- **Font Family**:
-    - **Primary**: `Geist`, with a standard fallback stack: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`.
-    - **Monospace**: `Geist Mono`, with a standard fallback stack: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`.
+| Role | Size | Line Height | Letter Spacing | Token |
+|------|------|-------------|----------------|-------|
+| caption | 13px | 1.2 | — | `--text-caption` |
+| body-sm | 15px | 1.6 | -0.165px | `--text-body-sm` |
+| body-lg | 20px | 1.33 | -0.24px | `--text-body-lg` |
+| subheading | 24px | 1.33 | -0.288px | `--text-subheading` |
+| heading-sm | 32px | 1.13 | -0.704px | `--text-heading-sm` |
+| heading | 48px | 1 | -1.056px | `--text-heading` |
+| heading-lg | 64px | 1 | -1.408px | `--text-heading-lg` |
+| display | 72px | 1 | -1.584px | `--text-display` |
 
-- **Hierarchy**:
-| Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Display** | Geist Mono | 48px | 400 | 1.2 | -0.02em (inferred) | Reserved for primary page hero headlines. |
-| **H1** | Geist Mono | 32px | 400 | 1.2 | -0.02em (inferred) | Section titles and major headings. |
-| **H2** | Geist Mono | 24px | 400 | 1.3 | -0.01em (inferred) | Sub-section titles. |
-| **H3** | Geist | 20px | 500 | 1.4 | normal | Card titles and minor headings. |
-| **Body (Large)** | Geist | 16px | 400 | 1.5 | normal | Used for introductory paragraphs. |
-| **Body (Default)** | Geist | 14px | 400 | 1.5 | normal | The standard for all paragraph text. |
-| **Caption** | Geist | 12px | 400 | 1.5 | normal | Used for metadata, labels, and legal text. |
-| **Code/Mono** | Geist Mono | 14px | 400 | 1.5 | normal | Used for inline code snippets and labels. |
+## Tokens — Spacing & Shapes
 
-- **Principles**:
-    - **Purposeful Pairing**: `Geist Mono` is used exclusively for headings to create a technical, structured feel, while `Geist` is used for all body copy for optimal readability.
-    - **High Contrast**: Text color is almost always `#171717` or `#4d4d4d` on a white/off-white background, ensuring excellent clarity.
-    - **Consistent Weight**: The system heavily favors a regular (400) weight across both font families, using size and family as the primary means of establishing hierarchy. Medium (500) weight is used sparingly for emphasis.
+**Base unit:** 4px
 
-## 4. Component Stylings
+**Density:** compact
 
-### Buttons
+### Spacing Scale
 
-**Primary Button**
-The primary call-to-action is a solid black button with white text. It uses a sharp 6px radius for standard buttons or a fully-rounded pill shape for major CTAs.
+| Name | Value | Token |
+|------|-------|-------|
+| 4 | 4px | `--spacing-4` |
+| 8 | 8px | `--spacing-8` |
+| 12 | 12px | `--spacing-12` |
+| 16 | 16px | `--spacing-16` |
+| 20 | 20px | `--spacing-20` |
+| 24 | 24px | `--spacing-24` |
+| 28 | 28px | `--spacing-28` |
+| 32 | 32px | `--spacing-32` |
+| 36 | 36px | `--spacing-36` |
+| 40 | 40px | `--spacing-40` |
+| 48 | 48px | `--spacing-48` |
+| 56 | 56px | `--spacing-56` |
+| 64 | 64px | `--spacing-64` |
+| 80 | 80px | `--spacing-80` |
+| 96 | 96px | `--spacing-96` |
+| 128 | 128px | `--spacing-128` |
 
-```css
-.button-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-primary-text, #ffffff);
-  background-color: var(--color-primary, #171717);
-  border: 1px solid var(--color-primary, #171717);
-  border-radius: var(--radius-md, 6px);
-  cursor: pointer;
-  transition: opacity 0.2s ease-out;
-}
+### Border Radius
 
-.button-primary:hover {
-  opacity: 0.8; /* inferred from screenshot */
-}
+| Element | Value |
+|---------|-------|
+| cards | 12px |
+| pills | 9999px |
+| small | 2px |
+| badges | 4px |
+| inputs | 6px |
+| buttons | 6px |
 
-.button-primary:active {
-  opacity: 0.7; /* inferred from screenshot */
-}
+### Shadows
 
-.button-primary:disabled {
-  background-color: #fafafa; /* inferred from screenshot */
-  color: #8f8f8f; /* inferred from screenshot */
-  border-color: #ebebeb; /* inferred from screenshot */
-  cursor: not-allowed;
-}
-```
+| Name | Value | Token |
+|------|-------|-------|
+| sm | `rgba(0, 0, 0, 0.4) 0px 2px 4px 0px` | `--shadow-sm` |
+| md | `rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset` | `--shadow-md` |
+| subtle | `rgb(35, 37, 42) 0px 0px 0px 1px inset` | `--shadow-subtle` |
+| subtle-2 | `rgba(0, 0, 0, 0.2) 0px 0px 0px 1px` | `--shadow-subtle-2` |
+| subtle-3 | `rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) ...` | `--shadow-subtle-3` |
+| xl | `rgba(8, 9, 10, 0.6) 0px 4px 32px 0px` | `--shadow-xl` |
+| subtle-4 | `rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset, rgba(255...` | `--shadow-subtle-4` |
+| subtle-5 | `rgba(0, 0, 0, 0.1) 0px 0px 0px 2px` | `--shadow-subtle-5` |
 
-**Secondary Button**
-The secondary button is an outlined style with a white background, black text, and a thin black border.
+### Layout
 
-```css
-.button-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-secondary-text, #171717);
-  background-color: var(--color-secondary, #ffffff);
-  border: 1px solid var(--color-border, #ebebeb);
-  border-radius: var(--radius-md, 6px);
-  cursor: pointer;
-  transition: border-color 0.2s ease-out, color 0.2s ease-out;
-}
+- **Page max-width:** 1200px
+- **Section gap:** 96px
+- **Card padding:** 24px
+- **Element gap:** 8px
 
-.button-secondary:hover {
-  border-color: var(--color-primary, #171717);
-  color: var(--color-primary, #171717);
-}
+## Components
 
-.button-secondary:active {
-  background-color: var(--color-surface, #fafafa);
-  border-color: var(--color-primary, #171717);
-}
+### Primary Action Button (Acid Lime)
+**Role:** High-emphasis CTA — the one chromatic button in the system
 
-.button-secondary:disabled {
-  color: #8f8f8f; /* inferred from screenshot */
-  border-color: #ebebeb; /* inferred from screenshot */
-  cursor: not-allowed;
-}
-```
+Background #e4f222, text #08090a, border-radius 6px, padding 10px 16px, Inter 14px / weight 510, letter-spacing -0.011em. Sits as the sole filled chromatic element — every other button on the site is neutral.
 
-**Ghost Button**
-A text-only button used for tertiary actions, often in navigation or toolbars. It has no border or background.
+### Nav Text Button
+**Role:** Top navigation items
 
-```css
-.button-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-text-secondary, #4d4d4d);
-  background-color: transparent;
-  border: none;
-  border-radius: var(--radius-md, 6px);
-  cursor: pointer;
-  transition: color 0.2s ease-out;
-}
+Transparent background, text #d0d6e0, padding 8px 12px, Inter 13px / weight 400. No border, no fill — pure typographic nav with underline on hover.
 
-.button-ghost:hover {
-  color: var(--color-text-primary, #171717);
-}
+### Pill Button
+**Role:** Tag chips, status pills, compact action triggers
 
-.button-ghost:active {
-  color: var(--color-text-primary, #171717);
-}
+Background rgba(255,255,255,0.05), text #d0d6e0, border-radius 9999px, padding 4px 12px, Inter 12–13px / weight 400.
 
-.button-ghost:disabled {
-  color: #8f8f8f; /* inferred from screenshot */
-  cursor: not-allowed;
-}
-```
+### Ghost / Outline Button
+**Role:** Secondary actions, less prominent CTAs
 
-### Cards & Containers
-Cards are simple, clean containers with sharp corners, a subtle border, and a light shadow that lifts on hover.
+Transparent background, border 1px #23252a, text #d0d6e0, border-radius 6px, padding 8px 12px, Inter 13px / weight 400.
 
-```css
-.card {
-  background-color: var(--color-background, #ffffff);
-  border-radius: var(--radius-md, 6px);
-  padding: 24px;
-  border: 1px solid var(--color-border, #ebebeb);
-  box-shadow: var(--elevation-card, 0px 1px 2px 0px rgba(0, 0, 0, 0.05));
-  transition: box-shadow 0.2s ease-out, transform 0.2s ease-out;
-}
+### Sign-up Button (Rounded Pill, Neutral)
+**Role:** High-emphasis nav CTA
 
-.card:hover {
-  transform: translateY(-2px); /* inferred from screenshot */
-  box-shadow: var(--elevation-hover, 0 0 0 1px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.08)); /* inferred from screenshot */
-}
-```
+Background #ffffff, text #08090a, border-radius 9999px, padding 8px 16px, Inter 13px / weight 510. White pill against the dark nav bar — the second highest-contrast element after the acid-lime CTA.
 
-### Inputs & Forms
+### Card (Product Screenshot Frame)
+**Role:** Large showcase surface for product UI screenshots
 
-**Text Input**
-Inputs are minimal, with a light gray border that darkens on hover and receives a blue focus ring.
+Background #0f1011, border-radius 12px, inset shadow rgb(35,37,42) 0 0 0 1px, padding 24px. Hairline inner border defines the card edge — no outer shadow, no glow.
 
-```css
-.form-label {
-  display: block;
-  font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary, #171717);
-  margin-bottom: 8px;
-}
+### Card (Subtle)
+**Role:** Small content cards, nested panels
 
-.text-input {
-  width: 100%;
-  padding: 8px 12px;
-  font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  color: var(--color-text-primary, #171717);
-  background-color: var(--color-background, #ffffff);
-  border: 1px solid var(--color-border, #ebebeb);
-  border-radius: var(--radius-md, 6px);
-  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out;
-}
+Background rgba(255,255,255,0.02), border-radius 6px, shadow rgba(0,0,0,0.4) 0 2px 4px, padding 8px. Almost invisible — the card barely separates from the canvas.
 
-.text-input:focus {
-  outline: none;
-  border-color: var(--color-accent, #0070f3);
-  box-shadow: var(--elevation-focus, 0 0 0 2px #ffffff, 0 0 0 4px #0070f3);
-}
+### Text Input
+**Role:** Form fields, search inputs
 
-.text-input:disabled {
-  background-color: var(--color-surface, #fafafa);
-  color: var(--color-text-muted, #666666);
-  cursor: not-allowed;
-}
-```
+Background rgba(255,255,255,0.02), border 1px rgba(255,255,255,0.08), text #d0d6e0, border-radius 6px, padding 12px 14px, Inter 14px / weight 400. Focus ring: border brightens to #d0d6e0.
 
-### Navigation
+### Badge / Status Tag
+**Role:** Issue status, category labels, inline metadata
 
-**Navigation Link**
-Header navigation links are simple text elements that darken on hover. The active state is indicated by bold text.
+Background rgba(255,255,255,0.05), text #8a8f98, border-radius 4px, padding 0px 6px, Inter 12px / weight 400. Color-coded variants use Pulse Green, Coral Red, Iris Violet, or Lavender fills.
 
-```css
-.nav-link {
-  padding: 8px 12px;
-  font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-text-secondary, #4d4d4d);
-  text-decoration: none;
-  transition: color 0.15s ease-in-out;
-}
+### Logo Mark
+**Role:** Brand identification in nav
 
-.nav-link:hover {
-  color: var(--color-text-primary, #171717);
-}
+Linear wordmark + geometric glyph, Inter 16px / weight 510, color #ffffff. Glyph rendered as inline SVG in white.
 
-.nav-link[aria-current="page"],
-.nav-link.active {
-  color: var(--color-text-primary, #171717);
-  font-weight: 500;
-}
-```
+### Logo Bar (Customer Strip)
+**Role:** Social proof — customer logos in a horizontal row
 
-### Links
+Neutral grey logos (Vercel, Cursor, Oscar, OpenAI, Coinbase, Cash App, Boom, Ramp) at #8a8f98–#d0d6e0, evenly spaced with 48–64px gaps, no card backgrounds.
 
-**Standard Link**
-Inline links are colored with the brand's secondary blue accent and underline on hover.
+### Hero Gradient Floor
+**Role:** Atmospheric base under the product screenshot
 
-```css
-a.link-standard {
-  color: var(--color-link, #0068d6);
-  text-decoration: none;
-  transition: text-decoration-color 0.2s ease-out;
-}
+Linear gradient from rgb(8,9,10) at 10% to rgb(208,214,224) at 100% — a subtle light wash that grounds the floating product UI against the void.
 
-a.link-standard:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--color-link, #0068d6);
-}
-
-a.link-standard:visited {
-  color: #7820bc; /* From extracted tokens */
-}
-```
-
-### Badges
-
-**Status Badge**
-Small, inline badges used to indicate status, such as "NEW". They feature a thin border and uppercase text.
-
-```css
-.status-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  font-family: 'Geist Mono', monospace;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--color-text-primary, #171717);
-  background-color: var(--color-background, #ffffff);
-  border: 1px solid var(--color-text-primary, #171717);
-  border-radius: var(--radius-sm, 4px);
-  text-transform: uppercase;
-}
-```
-
-## 5. Layout Principles
-
-- **Spacing System**: The system is built on a 4px base unit. All padding, margins, and gaps should use multiples of this base.
-    - **Scale**: `[4, 8, 12, 16, 24, 32, 40, 48, 64]`
-    - **Usage Context**:
-        - `4px`: Micro-spacing, icon-to-text gaps.
-        - `8px`: Small gaps, padding inside small components like badges.
-        - `12px`, `16px`: Standard padding for inputs and buttons.
-        - `24px`: Content padding inside cards and containers.
-        - `32px`: Gaps between distinct UI elements or cards.
-        - `48px`, `64px`: Large-scale spacing for separating page sections.
-
-- **Grid & Container**:
-    _Note: Container widths and column counts are not extracted from the source. The values below are reasonable defaults inferred from the visible layout density._
-    - **Max Width**: `1200px` (inferred)
-    - **Columns**: 12-column grid system.
-    - **Gutter**: `24px` (inferred)
-    - **Section Padding**: `64px` vertical padding for major sections, `32px` for subsections.
-
-- **Whitespace Philosophy**: Whitespace is used generously to create focus and separation. The underlying grid provides structure, but content rarely feels cramped. Ample padding within components and significant margins between sections are key to the clean, uncluttered feel.
-
-- **Border Radius Scale**:
-    - `4px (sm)`: Used for small, inline elements like badges.
-    - `6px (md)`: The default radius for all primary containers, including cards, inputs, and standard buttons.
-    - `9999px (full)`: Reserved for pill-shaped buttons and toggles, creating a strong visual distinction.
-
-## 6. Depth & Elevation
-ATS's elevation system is subtle, relying more on borders than heavy shadows for depth at lower levels. Shadows become more prominent for transient, overlay elements like menus and modals. Z-index values are sourced directly from the live site.
-
-| Level | Treatment | Use | z-index |
-| :--- | :--- | :--- | :--- |
-| **z-0 (Flat)** | `border: 1px solid #ebebeb;` | Default state for inputs, secondary buttons. | `1` |
-| **z-1 (Card)** | `box-shadow: 0 0 0 1px #ebebeb, 0 1px 2px rgba(0,0,0,0.05);` | Default card, static containers. | `1-2` |
-| **z-2 (Hover)** | `box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.08);` | Hovered cards and interactive elements. | `2` |
-| **z-3 (Header)** | `border-bottom: 1px solid rgba(0,0,0,0.1);` | Sticky navigation header. | `75` |
-| **z-4 (Popover)** | `box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.05);` | Dropdown menus, tooltips. | `100` |
-| **z-5 (Modal)** | `box-shadow: 0 8px 16px -4px rgba(0,0,0,0.05), 0 24px 32px -8px rgba(0,0,0,0.1);` | Modals and critical overlays. | `1000+` |
-
-**Shadow Philosophy**: The philosophy is "border-first." Most static elements are defined by a 1px border (`#ebebeb`). True `box-shadow` is reserved for interactive states (like hover) or for elements that need to appear visually above the main content plane, such as popovers and modals. This keeps the default UI exceptionally clean and flat.
-
-## 7. Do's and Don'ts
+## Do's and Don'ts
 
 ### Do
-*   **Do** use `Geist Mono` for all headings and `Geist` for all body text.
-*   **Do** use `#171717` for primary buttons and `#ffffff` with a 1px `#ebebeb` border for secondary buttons.
-*   **Do** apply the `6px` border radius to all cards, inputs, and standard buttons.
-*   **Do** use the 4px-based spacing scale, especially `24px` for internal padding and `32px` for gaps.
-*   **Do** ensure body text is `#4d4d4d` on `#fafafa` or `#ffffff` backgrounds.
-*   **Do** use the primary accent color `#0070f3` for focus rings and status indicators only.
-*   **Do** use a `1px` border of `#ebebeb` as the primary method of separating elements.
-*   **Do** use fully-rounded `9999px` radius exclusively for high-priority "pill" buttons.
+- Use Inter Variable with font-feature-settings 'cv01' on, 'ss03' on, 'zero' on — these alternate glyphs define Linear's typographic identity
+- Use #e4f222 exclusively for the single primary action per view — never for decoration, never for secondary buttons
+- Set body text at 16px Inter weight 400 with line-height 1.5 — larger reading sizes (17px+ at weight 590) are reserved for body emphasis blocks
+- Use letter-spacing -0.022em at 48px and above — tight tracking is non-negotiable for display type
+- Set card radius to 12px, button radius to 6px, pill radius to 9999px — three radii is the entire radius vocabulary
+- Use 0.5px hairline borders (#23252a or #383b3f) instead of shadows for surface separation — Linear's elevation comes from borders and subtle inner shadows
+- Keep section gaps at 96px and element gaps at 8px — the 8/12/24/96 spacing ladder is the rhythm
 
 ### Don't
-*   **Don't** mix `Geist` and `Geist Mono` within the same text block.
-*   **Don't** use a border-radius other than `4px`, `6px`, or `9999px`.
-*   **Don't** apply heavy box-shadows to static, non-interactive cards. Use the `elevation.card` spec.
-*   **Don't** use colors other than `#171717`, `#ffffff`, or `#4d4d4d` for button text.
-*   **Don't** use custom spacing values; adhere to the `[4, 8, 12, 16, 24, 32, 40, 48, 64]` scale.
-*   **Don't** use text color `#8f8f8f` on a `#fafafa` background for normal-sized text; its 3.1 ratio fails AA contrast.
-*   **Don't** create a new shade of gray; stick to the provided `#4d4d4d` and `#666666` tokens.
-*   **Don't** use underline text decoration on links except on `:hover`.
+- Do not use bold weights (700+) — Linear's type scale caps at weight 590, the system deliberately avoids heavy display weights
+- Do not use decorative gradients on buttons, cards, or text — gradients are reserved for the hero atmospheric floor only
+- Do not introduce additional chromatic accent colors as actions — the acid-lime button is the only chromatic UI element
+- Do not use large radii (16px+) on cards or panels — 12px is the max card radius in this system
+- Do not use shadows to separate cards from the canvas — use hairline borders (#23252a) and inner inset shadows instead
+- Do not use chromatic text colors for body copy — all body text sits in the #d0d6e0 / #8a8f98 / #62666d grey scale
+- Do not use Berkeley Mono for headings or marketing copy — it is reserved for issue IDs, keyboard shortcuts, and technical metadata
 
-## 8. Responsive Behavior
-_Note: The breakpoints below are measured directly from the source CSS files._
+## Surfaces
 
-- **Breakpoints**:
-| Breakpoint Name | Width | Key Changes |
-| :--- | :--- | :--- |
-| **Mobile** | `< 600px` | Single-column layout. Main navigation collapses into a hamburger menu. Font sizes may decrease by ~2px. Padding is reduced to `16px`. |
-| **Tablet** | `600px - 960px` | Two or three-column layouts become possible. Navigation may remain collapsed or expand. Card grids reflow. |
-| **Desktop** | `> 960px` | Full multi-column layout. Max container width of `1200px` is applied. Full navigation is visible. |
+| Level | Name | Value | Purpose |
+|-------|------|-------|---------|
+| 0 | Void | `#08090a` | Page canvas — the default full-bleed background |
+| 1 | Carbon | `#0f1011` | Card surfaces, product screenshot frames, nav containers |
+| 2 | Obsidian | `#161718` | Elevated panels, deeper nested surfaces |
+| 3 | Slate | `#23252a` | Interactive surface tint, ghost button fills, border-adjacent backgrounds |
 
-- **Touch Targets**:
-    - All interactive elements, including buttons and links, must have a minimum touch target size of `44px` by `44px`.
-    - Ensure at least `8px` of space between adjacent touch targets to prevent accidental taps.
+## Elevation
 
-- **Collapsing Strategy**:
-    - **Navigation**: The primary horizontal navigation bar collapses into a hamburger-triggered drawer menu on screens narrower than `960px`.
-    - **Cards**: Card grids transition from 3-4 columns on desktop to 2 columns on tablet and a single stacked column on mobile.
-    - **Typography**: Display (`48px`) and H1 (`32px`) font sizes are reduced on mobile to prevent awkward wrapping and maintain hierarchy.
-    - **Padding**: Section padding is reduced from `64px` on desktop to `32px` on mobile. Component padding is reduced from `24px` to `16px`.
+Elevation in Linear's system is achieved almost entirely through hairline borders (0.5px #23252a or 1px inset #23252a) and subtle dark drop shadows (rgba(0,0,0,0.4) 0 2px 4px) rather than layered shadow stacks. The visual hierarchy comes from the surface-level progression (#08090a → #0f1011 → #161718 → #23252a) and border definition, not from ambient shadow. The acid-lime CTA button uses an inset shadow stack (0px 5px 2px / 0px 3px 2px / 0px 1px 1px) — the only place in the system where a real shadow is applied to a chrome element.
 
-## 9. Agent Prompt Guide
+## Imagery
 
-- **Quick Color Reference**:
-    - Primary Button BG: `#171717`
-    - Primary Button Text: `#ffffff`
-    - Secondary Button BG: `#ffffff`
-    - Secondary Button Text: `#171717`
-    - Main Background: `#ffffff`
-    - Card/Surface Background: `#fafafa`
-    - Headline Text: `#171717`
-    - Body Text: `#4d4d4d`
-    - Border Color: `#ebebeb`
-    - Accent/Focus Color: `#0070f3`
+Linear's visual language is product-screenshot-first: the hero and section illustrations are real Linear app UI captured at full fidelity — issue cards, kanban boards, AI agent panels, command palettes — placed inside framed card containers with hairline borders. No stock photography, no lifestyle imagery, no abstract illustration. Logos appear as a customer strip in neutral grey (#8a8f98) at uniform size. Icons are minimal line-art SVGs in single-color grey scale. The hero screenshot floats on a subtle linear gradient (dark-to-light) that creates atmospheric depth without literal scenery. Every visual element is a functional artifact of the product itself.
 
-- **Iteration Guide**:
-    1.  **CTAs**: Always use the Primary Button (`#171717` background) for the main action on a page.
-    2.  **Typography**: All headings use `Geist Mono` (400 weight). All body text uses `Geist` (400 weight).
-    3.  **Sizing**: Default body font size is `14px`. Default heading (`H2`) is `24px`.
-    4.  **Spacing**: Use the 4px scale: `[4, 8, 12, 16, 24, 32, 48, 64]`. Default card padding is `24px`.
-    5.  **Radius**: Default border-radius for cards and inputs is `6px`. Use `9999px` only for pill buttons.
-    6.  **Cards**: Cards must have a `1px` solid `#ebebeb` border and the `elevation.card` box-shadow.
-    7.  **Inputs**: Inputs must have a `1px` solid `#ebebeb` border and use the `#0070f3` focus ring.
-    8.  **Shadows**: Use `elevation.card` for static elements. Reserve stronger shadows for hover states or popovers.
-    9.  **Contrast**: Body text (`#4d4d4d`) on the main background (`#ffffff`) passes AAA. Never use `#8f8f8f` for small text.
-    10. **Mobile**: On viewports under `600px`, switch to a single-column layout and reduce padding to `16px`.
+## Layout
+
+Layout is max-width contained at ~1200px, centered, with full-bleed dark backgrounds extending to viewport edges. The hero is a left-aligned oversized headline (64–72px) paired with a right-aligned link CTA, followed by a large product screenshot that bleeds beyond the max-width slightly. Section rhythm alternates between text-left/image-right 2-column compositions and full-width product showcase bands, separated by 96px vertical gaps. The customer logo strip is a single horizontal row. The page never uses 3-column card grids or masonry — information density stays low, with most sections using generous whitespace and a single focal point per screen. Navigation is a fixed top bar with left-aligned logo and right-aligned links, no sidebar, no mega-menu.
+
+## Agent Prompt Guide
+
+**Quick Color Reference:**
+- text (primary heading): #ffffff
+- text (body): #d0d6e0
+- text (muted): #8a8f98
+- background (canvas): #08090a
+- background (card): #0f1011
+- border (hairline): #23252a
+- accent (CTA): #e4f222
+- primary action: #e4f222 (filled action)
+
+**3-5 Example Component Prompts:**
+
+1. **Hero headline block:** Full-bleed #08090a canvas. Headline at 64px Inter Variable weight 510, color #ffffff, letter-spacing -0.022em, line-height 1.0. Subtext at 16px Inter weight 400, color #8a8f98. No button — secondary link text in #d0d6e0 with arrow glyph.
+
+2. **Product screenshot card:** Background #0f1011, border-radius 12px, inset border 1px #23252a via box-shadow, padding 24px. Contains a simulated app UI at full opacity over the card surface. No outer drop shadow.
+
+3. **Acid-lime primary action button:** Background #e4f222, text #08090a, border-radius 6px, padding 10px 16px, Inter 14px weight 510, letter-spacing -0.011em. Only one per view.
+
+4. **Nav top bar:** Background #08090a (transparent over canvas), padding 16px horizontal, max-width 1200px centered. Logo wordmark #ffffff at 16px weight 510 left-aligned. Nav links #d0d6e0 at 13px weight 400, 8px gaps. Right-aligned white pill sign-up button: bg #ffffff, text #08090a, border-radius 9999px, padding 8px 16px.
+
+5. **Status badge row:** Horizontal flex, 8px gap. Each badge: background rgba(255,255,255,0.05), text #8a8f98, border-radius 4px, padding 0px 6px, Inter 12px weight 400. Color-coded variants: #27a644 for success, #eb5757 for error, #6366f1 for tags.
+
+## Type Scale Detail
+
+Display: 72px / 510 / lh 1.0 / ls -0.022em
+Hero: 64px / 510 / lh 1.0 / ls -0.022em
+Section heading: 48px / 510 / lh 1.0 / ls -0.022em
+Subheading: 32px / 400 / lh 1.13 / ls -0.022em
+Heading: 24px / 400 / lh 1.33 / ls -0.012em
+Body emphasis: 20px / 590 / lh 1.33 / ls -0.012em
+Body large: 17px / 590 / lh 1.6 / ls default
+Body: 16px / 400 / lh 1.5 / ls default
+Body small: 15px / 400 / lh 1.6 / ls -0.011em
+Caption: 13px / 400 / lh 1.2 / ls default
+Label: 12px / 400 / lh 1.4 / ls default
+Micro: 10px / 510 / lh 1.5 / ls default
+
+## Similar Brands
+
+- **Vercel** — Same dark-canvas-first approach with hairline borders, tight Inter typography, and product-screenshot-as-hero layout — both treat the product UI as the visual content rather than illustration
+- **Cursor** — Identical midnight dark mode with acid-lime accent CTA, compact Inter type at 400–510 weights, and product-screenshot showcase cards at 12px radius
+- **Raycast** — Shared dark precision-instrument aesthetic — compact spacing, 6px button radius, monochromatic chrome with a single functional accent color for active states
+- **Framer** — Same dark-canvas layout language with large 48–64px Inter headings at tight tracking, product-screenshot hero cards, and minimal ornament between sections
+
+## Quick Start
+
+### CSS Custom Properties
+
+```css
+:root {
+  /* Colors */
+  --color-void: #08090a;
+  --color-carbon: #0f1011;
+  --color-obsidian: #161718;
+  --color-graphite: #23252a;
+  --color-smoke: #383b3f;
+  --color-ash: #62666d;
+  --color-fog: #8a8f98;
+  --color-mist: #d0d6e0;
+  --color-bone: #e5e5e6;
+  --color-paper: #ffffff;
+  --color-acid-lime: #e4f222;
+  --color-pulse-green: #27a644;
+  --color-coral-red: #eb5757;
+  --color-signal-teal: #02b8cc;
+  --color-iris-violet: #6366f1;
+  --color-lavender: #8b5cf6;
+
+  /* Typography — Font Families */
+  --font-inter-variable: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-berkeley-mono: 'Berkeley Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Typography — Scale */
+  --text-caption: 13px;
+  --leading-caption: 1.2;
+  --text-body-sm: 15px;
+  --leading-body-sm: 1.6;
+  --tracking-body-sm: -0.165px;
+  --text-body-lg: 20px;
+  --leading-body-lg: 1.33;
+  --tracking-body-lg: -0.24px;
+  --text-subheading: 24px;
+  --leading-subheading: 1.33;
+  --tracking-subheading: -0.288px;
+  --text-heading-sm: 32px;
+  --leading-heading-sm: 1.13;
+  --tracking-heading-sm: -0.704px;
+  --text-heading: 48px;
+  --leading-heading: 1;
+  --tracking-heading: -1.056px;
+  --text-heading-lg: 64px;
+  --leading-heading-lg: 1;
+  --tracking-heading-lg: -1.408px;
+  --text-display: 72px;
+  --leading-display: 1;
+  --tracking-display: -1.584px;
+
+  /* Typography — Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-w510: 510;
+  --font-weight-w590: 590;
+
+  /* Spacing */
+  --spacing-unit: 4px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-36: 36px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-56: 56px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
+  --spacing-96: 96px;
+  --spacing-128: 128px;
+
+  /* Layout */
+  --page-max-width: 1200px;
+  --section-gap: 96px;
+  --card-padding: 24px;
+  --element-gap: 8px;
+
+  /* Border Radius */
+  --radius-sm: 2px;
+  --radius-md: 6px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 22px;
+  --radius-full: 400px;
+  --radius-full-2: 9999px;
+
+  /* Named Radii */
+  --radius-cards: 12px;
+  --radius-pills: 9999px;
+  --radius-small: 2px;
+  --radius-badges: 4px;
+  --radius-inputs: 6px;
+  --radius-buttons: 6px;
+
+  /* Shadows */
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
+  --shadow-subtle: rgb(35, 37, 42) 0px 0px 0px 1px inset;
+  --shadow-subtle-2: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
+  --shadow-subtle-3: rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px, rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
+  --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
+  --shadow-subtle-4: rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.6) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 4px 4px 0px;
+  --shadow-subtle-5: rgba(0, 0, 0, 0.1) 0px 0px 0px 2px;
+
+  /* Surfaces */
+  --surface-void: #08090a;
+  --surface-carbon: #0f1011;
+  --surface-obsidian: #161718;
+  --surface-slate: #23252a;
+}
+```
+
+### Tailwind v4
+
+```css
+@theme {
+  /* Colors */
+  --color-void: #08090a;
+  --color-carbon: #0f1011;
+  --color-obsidian: #161718;
+  --color-graphite: #23252a;
+  --color-smoke: #383b3f;
+  --color-ash: #62666d;
+  --color-fog: #8a8f98;
+  --color-mist: #d0d6e0;
+  --color-bone: #e5e5e6;
+  --color-paper: #ffffff;
+  --color-acid-lime: #e4f222;
+  --color-pulse-green: #27a644;
+  --color-coral-red: #eb5757;
+  --color-signal-teal: #02b8cc;
+  --color-iris-violet: #6366f1;
+  --color-lavender: #8b5cf6;
+
+  /* Typography */
+  --font-inter-variable: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-berkeley-mono: 'Berkeley Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Typography — Scale */
+  --text-caption: 13px;
+  --leading-caption: 1.2;
+  --text-body-sm: 15px;
+  --leading-body-sm: 1.6;
+  --tracking-body-sm: -0.165px;
+  --text-body-lg: 20px;
+  --leading-body-lg: 1.33;
+  --tracking-body-lg: -0.24px;
+  --text-subheading: 24px;
+  --leading-subheading: 1.33;
+  --tracking-subheading: -0.288px;
+  --text-heading-sm: 32px;
+  --leading-heading-sm: 1.13;
+  --tracking-heading-sm: -0.704px;
+  --text-heading: 48px;
+  --leading-heading: 1;
+  --tracking-heading: -1.056px;
+  --text-heading-lg: 64px;
+  --leading-heading-lg: 1;
+  --tracking-heading-lg: -1.408px;
+  --text-display: 72px;
+  --leading-display: 1;
+  --tracking-display: -1.584px;
+
+  /* Spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-36: 36px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-56: 56px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
+  --spacing-96: 96px;
+  --spacing-128: 128px;
+
+  /* Border Radius */
+  --radius-sm: 2px;
+  --radius-md: 6px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-2xl-2: 22px;
+  --radius-full: 400px;
+  --radius-full-2: 9999px;
+
+  /* Shadows */
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset;
+  --shadow-subtle: rgb(35, 37, 42) 0px 0px 0px 1px inset;
+  --shadow-subtle-2: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
+  --shadow-subtle-3: rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px, rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
+  --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
+  --shadow-subtle-4: rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.6) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 4px 4px 0px;
+  --shadow-subtle-5: rgba(0, 0, 0, 0.1) 0px 0px 0px 2px;
+}
+```

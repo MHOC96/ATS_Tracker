@@ -77,7 +77,7 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">Recruiter decision</CardTitle>
+        <CardTitle>Recruiter decision</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -1,4 +1,5 @@
 import { CandidatesTable } from "@/components/candidates/candidates-table";
+import { PageTitle } from "@/components/layout/page-title";
 import { listCandidateApplications } from "@/lib/candidates/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 
@@ -8,12 +9,10 @@ export default async function CandidatesPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-          <h1 className="font-mono text-xl tracking-tight sm:text-2xl lg:text-3xl">Candidates</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Review applications, AI scores, and recruiter decisions.
-        </p>
-      </div>
+      <PageTitle
+        title="Candidates"
+        description="Review applications, AI scores, and recruiter decisions."
+      />
 
       <CandidatesTable
         applications={applications}

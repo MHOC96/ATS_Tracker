@@ -74,8 +74,7 @@ export async function getRecentApplications(
       status,
       applied_at,
       candidates(full_name),
-      jobs(title),
-      candidate_scores(final_score, created_at)
+      jobs(title)
     `
     )
     .order("applied_at", { ascending: false })
@@ -83,23 +82,23 @@ export async function getRecentApplications(
 
   if (error || !data) return [];
 
+  const applicationIds = data.map((row) => row.id);
+  const { data: scoreRows } = await supabase
+    .from("latest_candidate_scores")
+    .select("candidate_application_id, final_score")
+    .in("candidate_application_id", applicationIds);
+
+  const scoreByApplication = new Map(
+    (scoreRows ?? []).map((score) => [score.candidate_application_id, score])
+  );
+
   return data.map((row) => {
     const candidate = row.candidates as unknown as {
       full_name: string | null;
     } | null;
     const job = row.jobs as unknown as { title: string } | null;
-    const scores = row.candidate_scores as unknown as
-      | Array<{ final_score: number; created_at?: string }>
-      | { final_score: number; created_at?: string }
-      | null;
-
-    const scoreList = Array.isArray(scores) ? scores : scores ? [scores] : [];
-    const latestScore =
-      scoreList.sort(
-        (a, b) =>
-          new Date(b.created_at ?? 0).getTime() -
-          new Date(a.created_at ?? 0).getTime()
-      )[0]?.final_score ?? null;
+    const latest = scoreByApplication.get(row.id);
+    const latestScore = latest?.final_score ?? null;
 
     return {
       id: row.id,

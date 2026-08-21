@@ -106,7 +106,7 @@ export async function getDriveClient() {
   return google.drive({ version: "v3", auth });
 }
 
-export function buildGoogleAuthorizeUrl(origin: string) {
+export function buildGoogleAuthorizeUrl(origin: string, state?: string) {
   const redirectUri = getOAuthRedirectUri(origin);
   const oauth2 = createOAuth2Client(redirectUri);
 
@@ -115,5 +115,6 @@ export function buildGoogleAuthorizeUrl(origin: string) {
     prompt: "consent",
     scope: GOOGLE_OAUTH_SCOPES,
     include_granted_scopes: true,
+    state,
   });
 }

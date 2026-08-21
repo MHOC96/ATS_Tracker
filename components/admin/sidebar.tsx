@@ -18,19 +18,17 @@ export function AdminSidebar({ userRole }: AdminSidebarProps) {
       : adminNavItems.filter((item) => item.href !== "/admin/settings");
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-border bg-card lg:flex lg:flex-col">
-      <div className="flex h-16 items-center border-b border-border px-6">
+    <aside className="hidden w-56 shrink-0 flex-col border-r border-graphite bg-carbon lg:flex">
+      <div className="flex h-14 items-center border-b border-graphite px-5">
         <Link href="/admin" className="flex items-center gap-2">
-          <span className="font-mono text-sm font-medium tracking-tight text-foreground">
-            ATS
-          </span>
-          <span className="rounded border border-foreground px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider">
+          <span className="linear-mono text-[13px] text-acid-lime">ATS</span>
+          <span className="rounded border border-graphite px-1.5 py-0.5 linear-mono text-[10px] uppercase tracking-wider text-fog">
             Admin
           </span>
         </Link>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 p-4">
+      <nav className="flex flex-1 flex-col gap-0.5 p-3">
         {items.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -41,23 +39,27 @@ export function AdminSidebar({ userRole }: AdminSidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex min-h-10 items-center gap-2.5 rounded-md px-3 py-2.5 text-[13px] transition-colors",
                 isActive
-                  ? "bg-muted font-medium text-foreground"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  ? "bg-white/5 font-[510] text-paper"
+                  : "text-fog hover:bg-white/[0.03] hover:text-mist"
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              <item.icon className="size-4 shrink-0" />
+              {isActive && (
+                <span className="size-1.5 shrink-0 rounded-full bg-acid-lime" />
+              )}
+              <item.icon className="size-4 shrink-0 text-fog" />
               <span>{item.title}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-border p-4">
-        <p className="text-xs text-muted-foreground">
-          AI Recruitment Platform
+      <div className="border-t border-graphite p-4">
+        <p className="linear-caption">AI Recruitment Platform</p>
+        <p className="mt-2 linear-mono text-[10px] text-fog/80">
+          © {new Date().getFullYear()} mhoc
         </p>
       </div>
     </aside>

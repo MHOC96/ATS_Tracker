@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { deleteCandidateApplication } from "@/lib/candidates/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type ApplicationDeleteButtonProps = {
   applicationId: string;
   redirectTo?: string;
   variant?: "card" | "inline";
   canDelete: boolean;
+  className?: string;
 };
 
 export function ApplicationDeleteButton({
@@ -18,6 +20,7 @@ export function ApplicationDeleteButton({
   redirectTo = "/admin/candidates",
   variant = "card",
   canDelete,
+  className,
 }: ApplicationDeleteButtonProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +59,7 @@ export function ApplicationDeleteButton({
           type="button"
           variant="destructive"
           size="sm"
+          className={cn("w-full sm:w-auto", className)}
           disabled={loading}
           onClick={handleDelete}
         >
@@ -73,7 +77,7 @@ export function ApplicationDeleteButton({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">Delete application</CardTitle>
+        <CardTitle>Delete application</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">

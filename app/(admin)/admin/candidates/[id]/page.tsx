@@ -36,15 +36,15 @@ export default async function CandidateDetailPage({
             href="/admin/candidates"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "mb-3 -ml-2"
+              "mb-3 self-start min-h-10"
             )}
           >
             ← Back to candidates
           </Link>
-          <h1 className="break-words font-mono text-xl tracking-tight sm:text-2xl">
+          <h1 className="break-words text-[24px] font-[510] tracking-[-0.012em] text-paper sm:text-[32px]">
             {application.candidate.fullName ?? "Unknown candidate"}
           </h1>
-          <p className="mt-2 break-words text-sm text-muted-foreground">
+          <p className="mt-2 break-words text-[13px] text-fog">
             {application.job.title} · Applied{" "}
             {new Date(application.appliedAt).toLocaleDateString()}
           </p>
@@ -56,7 +56,7 @@ export default async function CandidateDetailPage({
         <div className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle className="font-mono text-lg font-normal">
+              <CardTitle>
                 Candidate profile
               </CardTitle>
             </CardHeader>
@@ -134,7 +134,7 @@ export default async function CandidateDetailPage({
           {application.latestDecision && (
             <Card>
               <CardHeader>
-                <CardTitle className="font-mono text-lg font-normal">
+                <CardTitle>
                   Latest decision
                 </CardTitle>
               </CardHeader>

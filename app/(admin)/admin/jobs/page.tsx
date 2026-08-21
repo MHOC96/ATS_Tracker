@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { JobsTable } from "@/components/jobs/jobs-table";
+import { PageTitle } from "@/components/layout/page-title";
 import { buttonVariants } from "@/components/ui/button";
 import { requireSessionUser } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
@@ -9,15 +10,16 @@ export default async function JobsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-mono text-xl tracking-tight sm:text-2xl">Jobs</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Create, publish, and manage job vacancies.
-          </p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <PageTitle
+          title="Jobs"
+          description="Create, publish, and manage job vacancies."
+        />
         {user.role === "ADMIN" && (
-          <Link href="/admin/jobs/new" className={cn(buttonVariants({ size: "sm" }), "w-full sm:w-auto")}>
+          <Link
+            href="/admin/jobs/new"
+            className={cn(buttonVariants({ size: "sm" }), "w-full sm:w-auto shrink-0")}
+          >
             Create job
           </Link>
         )}
