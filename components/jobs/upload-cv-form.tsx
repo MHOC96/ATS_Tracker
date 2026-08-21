@@ -60,12 +60,12 @@ export function UploadCvForm({ jobId, jobTitle }: UploadCvFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">CV file (PDF or image)</Label>
+            <Label htmlFor="file">CV file (PDF only)</Label>
             <Input
               id="file"
               name="file"
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              accept=".pdf,application/pdf"
               required
             />
           </div>
