@@ -1,7 +1,8 @@
 import { END, START, StateGraph } from "@langchain/langgraph";
-import { graphNodes } from "./nodes.js";
+import { loggedGraphNodes } from "./logged-nodes.js";
 import type { RecruitmentState } from "./state.js";
 import { RecruitmentStateAnnotation } from "./state.js";
+import { pipelineJobEnd, pipelineStep } from "../pipeline-log.js";
 
 function routeAfterLoad(state: RecruitmentState) {
   return state.status === "FAILED" ? "finalizeFailure" : "validateFile";
@@ -43,19 +44,19 @@ function routeAfterLoadScoring(state: RecruitmentState) {
 
 export function buildRecruitmentGraph() {
   return new StateGraph(RecruitmentStateAnnotation)
-    .addNode("loadApplication", graphNodes.loadApplication)
-    .addNode("validateFile", graphNodes.validateFile)
-    .addNode("extractCv", graphNodes.extractCv)
-    .addNode("validateExtraction", graphNodes.validateExtraction)
-    .addNode("loadJob", graphNodes.loadJob)
-    .addNode("loadScoringModel", graphNodes.loadScoringModel)
-    .addNode("auditCandidate", graphNodes.auditCandidate)
-    .addNode("calculateScore", graphNodes.calculateScore)
-    .addNode("storeResult", graphNodes.storeResult)
-    .addNode("updateRanking", graphNodes.updateRanking)
-    .addNode("archiveCv", graphNodes.archiveCv)
-    .addNode("finalizeManualReview", graphNodes.finalizeManualReview)
-    .addNode("finalizeFailure", graphNodes.finalizeFailure)
+    .addNode("loadApplication", loggedGraphNodes.loadApplication)
+    .addNode("validateFile", loggedGraphNodes.validateFile)
+    .addNode("extractCv", loggedGraphNodes.extractCv)
+    .addNode("validateExtraction", loggedGraphNodes.validateExtraction)
+    .addNode("loadJob", loggedGraphNodes.loadJob)
+    .addNode("loadScoringModel", loggedGraphNodes.loadScoringModel)
+    .addNode("auditCandidate", loggedGraphNodes.auditCandidate)
+    .addNode("calculateScore", loggedGraphNodes.calculateScore)
+    .addNode("storeResult", loggedGraphNodes.storeResult)
+    .addNode("updateRanking", loggedGraphNodes.updateRanking)
+    .addNode("archiveCv", loggedGraphNodes.archiveCv)
+    .addNode("finalizeManualReview", loggedGraphNodes.finalizeManualReview)
+    .addNode("finalizeFailure", loggedGraphNodes.finalizeFailure)
     .addEdge(START, "loadApplication")
     .addConditionalEdges("loadApplication", routeAfterLoad)
     .addConditionalEdges("validateFile", routeAfterValidateFile)
@@ -76,7 +77,9 @@ export function buildRecruitmentGraph() {
 export async function runRecruitmentWorkflow(applicationId: string) {
   const graph = buildRecruitmentGraph();
 
-  return graph.invoke({
+  pipelineStep(applicationId, "langgraph", "invoke workflow");
+
+  const result = await graph.invoke({
     applicationId,
     jobId: "",
     candidateId: "",
@@ -98,4 +101,8 @@ export async function runRecruitmentWorkflow(applicationId: string) {
     applyFormHints: null,
     extractionCorrectionHint: null,
   });
+
+  pipelineJobEnd(applicationId, result.status, result.error);
+
+  return result;
 }

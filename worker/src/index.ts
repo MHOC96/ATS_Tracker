@@ -8,10 +8,12 @@ import "./load-env.js";
 import { createServer } from "http";
 import { z } from "zod";
 import { workerConfig } from "./config.js";
+import { getGeminiKeyFormat } from "./ai/gemini-keys.js";
 import { withWorkerConcurrency } from "./concurrency.js";
 import { completeCvUploadToDrive } from "./jobs/complete-cv-upload.js";
 import { runRecruitmentWorkflow } from "./graph/workflow.js";
 import { startCvScreeningWorker } from "./queue/bullmq-worker.js";
+import { pipelineJobEnd, pipelineJobStart, pipelineStep } from "./pipeline-log.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
 const WORKER_SECRET = process.env.WORKER_API_SECRET;
@@ -38,21 +40,29 @@ function isAuthorized(req: import("http").IncomingMessage): boolean {
 }
 
 async function processApplication(applicationId: string): Promise<void> {
+  pipelineJobStart(applicationId, "http");
+
   await withWorkerConcurrency(async () => {
+    pipelineStep(applicationId, "drive-upload", "preflight before LangGraph");
     await completeCvUploadToDrive(applicationId);
 
     const result = await runRecruitmentWorkflow(applicationId);
 
     if (result.status === "FAILED" || result.status === "MANUAL_REVIEW") {
       console.error(
-        "[worker] completed",
+        "[worker] HTTP job completed with issues",
         applicationId,
         result.status,
         result.error ?? "no error message"
       );
     } else {
-      console.log("[worker] completed", applicationId, result.status);
+      console.log("[worker] HTTP job completed", applicationId, result.status);
     }
+  }).catch((error) => {
+    const message =
+      error instanceof Error ? error.message : String(error ?? "unknown");
+    pipelineJobEnd(applicationId, "FAILED", message);
+    throw error;
   });
 }
 
@@ -133,7 +143,7 @@ startCvScreeningWorker();
 server.listen(PORT, () => {
   console.log(`[worker] ATS AI worker listening on port ${PORT}`);
   console.log(
-    `[worker] vision=${workerConfig.visionModel} reasoning=${workerConfig.reasoningModel} geminiKeys=${workerConfig.geminiApiKeyCount}`
+    `[worker] vision=${workerConfig.visionModel} reasoning=${workerConfig.reasoningModel} geminiKeys=${workerConfig.geminiApiKeyCount} geminiKeyFormat=${getGeminiKeyFormat()}`
   );
   console.log("[worker] LangGraph workflow ready (Gemini + Groq)");
 });

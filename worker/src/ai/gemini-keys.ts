@@ -1,4 +1,4 @@
-import type { GoogleGenerativeAI } from "@google/generative-ai";
+import type { GoogleGenAI } from "@google/genai";
 
 function loadGeminiApiKeys(): string[] {
   const fromList = process.env.GEMINI_API_KEYS?.split(",")
@@ -18,6 +18,14 @@ let currentIndex = 0;
 
 export function getGeminiApiKeyCount(): number {
   return apiKeys.length;
+}
+
+export function getGeminiKeyFormat(): "auth" | "standard" | "unknown" | "none" {
+  if (apiKeys.length === 0) return "none";
+  const key = apiKeys[0];
+  if (key.startsWith("AQ.")) return "auth";
+  if (key.startsWith("AIza")) return "standard";
+  return "unknown";
 }
 
 export function getCurrentGeminiApiKey(): string {
@@ -57,7 +65,7 @@ export function isGeminiRateLimitError(error: unknown): boolean {
 }
 
 export async function withGeminiKeyRotation<T>(
-  operation: (client: GoogleGenerativeAI) => Promise<T>
+  operation: (client: GoogleGenAI) => Promise<T>
 ): Promise<T> {
   if (apiKeys.length === 0) {
     throw new Error(
@@ -69,8 +77,8 @@ export async function withGeminiKeyRotation<T>(
   const maxAttempts = apiKeys.length;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const client = new GoogleGenerativeAI(getCurrentGeminiApiKey());
+    const { GoogleGenAI } = await import("@google/genai");
+    const client = new GoogleGenAI({ apiKey: getCurrentGeminiApiKey() });
 
     try {
       return await operation(client);

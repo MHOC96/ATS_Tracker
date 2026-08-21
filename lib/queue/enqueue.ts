@@ -12,6 +12,37 @@ function isRedisEnqueueTimeout(error: unknown): boolean {
   return error instanceof Error && error.message === "REDIS_ENQUEUE_TIMEOUT";
 }
 
+function isRedisConnectionError(error: unknown): boolean {
+  if (error instanceof Error && error.name === "AggregateError") return true;
+  const code = (error as NodeJS.ErrnoException)?.code;
+  if (code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "ETIMEDOUT") {
+    return true;
+  }
+  if (error instanceof Error) {
+    if (error.message.includes("ECONNREFUSED")) return true;
+    if (error.message.includes("ENOTFOUND")) return true;
+    if (error.message === "REDIS_ENQUEUE_TIMEOUT") return true;
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "errors" in error &&
+    Array.isArray((error as AggregateError).errors)
+  ) {
+    return (error as AggregateError).errors.some((e) =>
+      isRedisConnectionError(e)
+    );
+  }
+  return false;
+}
+
+function shouldFallbackToHttpInDev(error: unknown): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    (isRedisEnqueueTimeout(error) || isRedisConnectionError(error))
+  );
+}
+
 async function enqueueViaHttp(applicationId: string): Promise<void> {
   const result = await queueApplicationProcessing(applicationId);
   if (process.env.NODE_ENV !== "production") {
@@ -44,7 +75,8 @@ export async function enqueueApplicationProcessing(
 ): Promise<void> {
   if (process.env.NODE_ENV === "production" && !isRedisQueueEnabled()) {
     throw new Error(
-      "REDIS_URL is required in production for durable job enqueue"
+      "REDIS_URL is required in production on Vercel (Next.js app), not only on the Railway worker. " +
+        "Add the same Redis connection URL to Vercel → Settings → Environment Variables, then redeploy."
     );
   }
 
@@ -53,11 +85,19 @@ export async function enqueueApplicationProcessing(
       await enqueueViaRedis(applicationId);
       return;
     } catch (error) {
-      if (process.env.NODE_ENV === "production" || !isRedisEnqueueTimeout(error)) {
-        throw error instanceof Error ? error : new Error(String(error));
+      if (process.env.NODE_ENV === "production" || !shouldFallbackToHttpInDev(error)) {
+        const message =
+          isRedisConnectionError(error)
+            ? "Cannot connect to Redis (check REDIS_URL format: redis://host:port, not redis:redis://...)"
+            : error instanceof Error
+              ? error.message
+              : String(error);
+        throw error instanceof Error && !isRedisConnectionError(error)
+          ? error
+          : new Error(message);
       }
       console.warn(
-        `[queue] Redis enqueue timed out — falling back to HTTP for ${applicationId}`
+        `[queue] Redis unreachable — falling back to HTTP worker for ${applicationId}`
       );
     }
   }

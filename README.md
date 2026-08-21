@@ -155,6 +155,7 @@ Copy from `.env.example`. Split between Vercel and Railway in production.
 | `GOOGLE_DRIVE_ARCHIVE_ROOT_ID` | |
 | `RAILWAY_WORKER_URL` | Worker public URL (no trailing slash) |
 | `WORKER_API_SECRET` | Shared secret with Railway |
+| `REDIS_URL` | **Required** — same public Redis URL as Railway worker (apply enqueues from Vercel) |
 
 ### Railway (worker)
 
@@ -169,6 +170,7 @@ Copy from `.env.example`. Split between Vercel and Railway in production.
 | `GOOGLE_OAUTH_*` | Drive download/move |
 | `GOOGLE_DRIVE_*_ROOT_ID` | Same folder IDs as Vercel |
 | `WORKER_API_SECRET` | Must match Vercel |
+| `REDIS_URL` | Same public Redis URL as Vercel (BullMQ consumer) |
 
 `WORKER_API_SECRET` is a random string you generate—not issued by a provider. Use the same value on both platforms.
 

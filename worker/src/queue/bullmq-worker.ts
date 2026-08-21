@@ -1,6 +1,11 @@
 import { Worker, type Job } from "bullmq";
 import { completeCvUploadToDrive } from "../jobs/complete-cv-upload.js";
 import { runRecruitmentWorkflow } from "../graph/workflow.js";
+import {
+  pipelineJobEnd,
+  pipelineJobStart,
+  pipelineStep,
+} from "../pipeline-log.js";
 
 export const CV_SCREENING_QUEUE = "cv-screening";
 
@@ -31,8 +36,16 @@ export function isRedisQueueEnabled(): boolean {
   return Boolean(process.env.REDIS_URL?.trim());
 }
 
+function normalizeRedisUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("redis:redis://")) {
+    return trimmed.slice("redis:".length);
+  }
+  return trimmed;
+}
+
 export function startCvScreeningWorker(): Worker<CvScreeningJobData> | null {
-  const redisUrl = process.env.REDIS_URL?.trim();
+  const redisUrl = normalizeRedisUrl(process.env.REDIS_URL ?? "");
   if (!redisUrl) {
     console.warn(
       "[worker] REDIS_URL not set — BullMQ consumer disabled (HTTP /process only)"
@@ -46,24 +59,36 @@ export function startCvScreeningWorker(): Worker<CvScreeningJobData> | null {
     CV_SCREENING_QUEUE,
     async (job: Job<CvScreeningJobData>) => {
       const { applicationId } = job.data;
-      console.log("[worker] BullMQ job started", applicationId);
+      pipelineJobStart(applicationId, "bullmq");
 
-      await completeCvUploadToDrive(applicationId);
+      try {
+        pipelineStep(applicationId, "drive-upload", "preflight before LangGraph");
+        await completeCvUploadToDrive(applicationId);
 
-      const result = await runRecruitmentWorkflow(applicationId);
+        const result = await runRecruitmentWorkflow(applicationId);
 
-      if (result.status === "FAILED" || result.status === "MANUAL_REVIEW") {
-        console.error(
-          "[worker] BullMQ job completed with issues",
-          applicationId,
-          result.status,
-          result.error ?? ""
-        );
-      } else {
-        console.log("[worker] BullMQ job completed", applicationId, result.status);
+        if (result.status === "FAILED" || result.status === "MANUAL_REVIEW") {
+          console.error(
+            "[worker] BullMQ job completed with issues",
+            applicationId,
+            result.status,
+            result.error ?? ""
+          );
+        } else {
+          console.log(
+            "[worker] BullMQ job completed",
+            applicationId,
+            result.status
+          );
+        }
+
+        return result;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : String(error ?? "unknown");
+        pipelineJobEnd(applicationId, "FAILED", message);
+        throw error;
       }
-
-      return result;
     },
     {
       connection: parseRedisConnection(redisUrl),

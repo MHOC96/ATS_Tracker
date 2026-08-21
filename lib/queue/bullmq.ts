@@ -18,8 +18,21 @@ type RedisConnectionOptions = {
 let queue: Queue<CvScreeningJobData> | null = null;
 
 function getRedisUrl(): string | null {
-  const url = process.env.REDIS_URL?.trim();
-  return url || null;
+  const raw = process.env.REDIS_URL?.trim();
+  if (!raw) return null;
+
+  // Railway copy-paste mistake: "redis:redis://..." instead of "redis://..."
+  if (raw.startsWith("redis:redis://")) {
+    const normalized = raw.slice("redis:".length);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "[queue] REDIS_URL had an extra redis: prefix — normalized automatically"
+      );
+    }
+    return normalized;
+  }
+
+  return raw;
 }
 
 function parseRedisConnection(url: string): RedisConnectionOptions {
