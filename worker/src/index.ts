@@ -57,7 +57,20 @@ const server = createServer(async (req, res) => {
 
         runRecruitmentWorkflow(payload.applicationId)
           .then((result) => {
-            console.log("[worker] completed", payload.applicationId, result.status);
+            if (result.status === "FAILED" || result.status === "MANUAL_REVIEW") {
+              console.error(
+                "[worker] completed",
+                payload.applicationId,
+                result.status,
+                result.error ?? "no error message"
+              );
+            } else {
+              console.log(
+                "[worker] completed",
+                payload.applicationId,
+                result.status
+              );
+            }
           })
           .catch((error) => {
             console.error("[worker] failed", payload.applicationId, error);
