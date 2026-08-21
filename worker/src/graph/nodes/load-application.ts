@@ -23,7 +23,11 @@ export async function loadApplication(
         manual_review_folder_id,
         archive_folder_id
       ),
-      cv_files(id, mime_type, drive_folder_id)
+      cv_files!candidate_applications_cv_file_id_fkey(
+        id,
+        mime_type,
+        drive_folder_id
+      )
     `
     )
     .eq("id", state.applicationId)
