@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateCandidate } from "@/lib/candidates/actions";
-import { applicationStatusSchema } from "@/packages/shared/schemas/enums";
+import { applicationStatusSchema } from "@/packages/shared/schemas";
 import type { z } from "zod";
 
 type ApplicationStatus = z.infer<typeof applicationStatusSchema>;

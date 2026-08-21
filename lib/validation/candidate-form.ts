@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { applicationStatusSchema } from "@/packages/shared/schemas/enums";
+import { applicationStatusSchema } from "@/packages/shared/schemas";
 
 export const updateCandidateSchema = z.object({
   applicationId: z.string().uuid(),
