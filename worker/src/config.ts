@@ -1,6 +1,8 @@
+import { resolveReasoningModel } from "./models.js";
+
 export const workerConfig = {
   visionModel: process.env.VISION_MODEL ?? "gemini-2.0-flash",
-  reasoningModel: process.env.REASONING_MODEL ?? "llama-3.3-70b-versatile",
+  reasoningModel: resolveReasoningModel(process.env.REASONING_MODEL),
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
   groqApiKey: process.env.GROQ_API_KEY ?? "",
   maxExtractionRetries: 1,

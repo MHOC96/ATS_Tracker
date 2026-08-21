@@ -148,7 +148,7 @@ Copy from `.env.example`. Split between Vercel and Railway in production.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key |
 | `GROQ_API_KEY` | JD generation |
-| `REASONING_MODEL` | e.g. `llama-3.3-70b-versatile` |
+| `REASONING_MODEL` | e.g. `openai/gpt-oss-120b` |
 | `GOOGLE_OAUTH_*` | Drive OAuth client + redirect URI |
 | `GOOGLE_DRIVE_INCOMING_ROOT_ID` | Stage folder IDs (3) |
 | `GOOGLE_DRIVE_MANUAL_REVIEW_ROOT_ID` | |
@@ -165,7 +165,7 @@ Copy from `.env.example`. Split between Vercel and Railway in production.
 | `GEMINI_API_KEY` | CV extraction |
 | `GROQ_API_KEY` | Candidate scoring |
 | `VISION_MODEL` | e.g. `gemini-2.0-flash` |
-| `REASONING_MODEL` | e.g. `llama-3.3-70b-versatile` |
+| `REASONING_MODEL` | e.g. `openai/gpt-oss-120b` |
 | `GOOGLE_OAUTH_*` | Drive download/move |
 | `GOOGLE_DRIVE_*_ROOT_ID` | Same folder IDs as Vercel |
 | `WORKER_API_SECRET` | Must match Vercel |
