@@ -1,7 +1,9 @@
 import { CandidatesTable } from "@/components/candidates/candidates-table";
 import { listCandidateApplications } from "@/lib/candidates/queries";
+import { requireSessionUser } from "@/lib/auth/session";
 
 export default async function CandidatesPage() {
+  const user = await requireSessionUser();
   const applications = await listCandidateApplications();
 
   return (
@@ -13,7 +15,13 @@ export default async function CandidatesPage() {
         </p>
       </div>
 
-      <CandidatesTable applications={applications} />
+      <CandidatesTable
+        applications={applications}
+        showActions
+        canEdit={user.role !== "REVIEWER"}
+        canDelete={user.role === "ADMIN"}
+        deleteRedirectTo="/admin/candidates"
+      />
     </div>
   );
 }

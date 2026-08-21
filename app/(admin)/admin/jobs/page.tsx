@@ -23,7 +23,7 @@ export default async function JobsPage() {
         )}
       </div>
 
-      <JobsTable />
+      <JobsTable canManage={user.role === "ADMIN"} />
     </div>
   );
 }

@@ -60,6 +60,10 @@ export const closeJobSchema = z.object({
   jobId: z.string().uuid(),
 });
 
+export const deleteJobSchema = z.object({
+  jobId: z.string().uuid(),
+});
+
 export function parseSkillsText(text?: string): string[] {
   if (!text?.trim()) return [];
   return text

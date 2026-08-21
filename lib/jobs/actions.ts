@@ -12,6 +12,7 @@ import {
   archiveJobSchema,
   closeJobSchema,
   createJobFormSchema,
+  deleteJobSchema,
   parseSkillsText,
   publishJobSchema,
   updateJobSchema,
@@ -469,6 +470,69 @@ export async function archiveJob(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to archive job",
+    };
+  }
+}
+
+export async function deleteJob(
+  input: z.infer<typeof deleteJobSchema>
+): Promise<ActionResult<{ jobId: string }>> {
+  try {
+    await requireAdminUser();
+    const parsed = deleteJobSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return { success: false, error: "Invalid job id" };
+    }
+
+    const supabase = await createClient();
+    const { data: job, error: fetchError } = await supabase
+      .from("jobs")
+      .select("id, slug, status")
+      .eq("id", parsed.data.jobId)
+      .single();
+
+    if (fetchError || !job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    if (job.status !== "DRAFT") {
+      return {
+        success: false,
+        error: "Only draft jobs can be permanently deleted. Archive published or closed jobs instead.",
+      };
+    }
+
+    const { count, error: countError } = await supabase
+      .from("candidate_applications")
+      .select("id", { count: "exact", head: true })
+      .eq("job_id", job.id);
+
+    if (countError) {
+      return { success: false, error: countError.message };
+    }
+
+    if (count && count > 0) {
+      return {
+        success: false,
+        error: "Cannot delete a job that has applications. Archive it instead.",
+      };
+    }
+
+    const { error: deleteError } = await supabase.from("jobs").delete().eq("id", job.id);
+
+    if (deleteError) {
+      return { success: false, error: deleteError.message };
+    }
+
+    revalidatePath("/admin/jobs");
+    revalidatePath("/jobs");
+
+    return { success: true, data: { jobId: job.id } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete job",
     };
   }
 }
