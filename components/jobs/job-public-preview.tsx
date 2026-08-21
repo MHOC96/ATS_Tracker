@@ -21,7 +21,7 @@ export function JobPublicPreview({ job, isDraft = false }: JobPublicPreviewProps
           </p>
         )}
       </CardHeader>
-      <CardContent className="rounded-lg border border-dashed border-graphite p-4 bg-void/50">
+      <CardContent className="min-w-0 overflow-x-hidden rounded-lg border border-dashed border-graphite bg-void/50 p-3 sm:p-4">
         <JobPublicView job={job} />
       </CardContent>
     </Card>

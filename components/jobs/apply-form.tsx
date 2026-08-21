@@ -12,9 +12,15 @@ import { cn } from "@/lib/utils";
 type ApplyFormProps = {
   jobSlug: string;
   jobTitle: string;
+  layout?: "default" | "sidebar";
 };
 
-export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
+export function ApplyForm({
+  jobSlug,
+  jobTitle,
+  layout = "default",
+}: ApplyFormProps) {
+  const isSidebar = layout === "sidebar";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -46,8 +52,14 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
 
   if (submitted) {
     return (
-      <Card className="gap-0 overflow-hidden p-0">
-        <CardHeader className="space-y-3 border-b border-graphite px-5 py-6 sm:px-7 sm:py-7">
+      <Card
+        className={cn(
+          "gap-0 overflow-hidden p-0",
+          isSidebar &&
+            "lg:rounded-xl lg:border-graphite/80 lg:shadow-[0_8px_24px_rgb(0,0,0,0.28)] lg:ring-1 lg:ring-white/[0.04]"
+        )}
+      >
+        <CardHeader className="space-y-2 border-b border-graphite px-4 py-4 sm:px-5 sm:py-5">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-pulse-green" aria-hidden />
             <div className="space-y-1">
@@ -59,8 +71,8 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-5 pb-6 pt-6 sm:px-7 sm:pb-7 sm:pt-7">
-          <p className="text-[15px] leading-relaxed text-fog">
+        <CardContent className="px-4 pb-5 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
+          <p className="text-[14px] leading-relaxed text-fog">
             We&apos;ve received your application. Our hiring team will review it
             and contact you if your profile matches what we&apos;re looking for.
           </p>
@@ -70,22 +82,39 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
   }
 
   return (
-    <Card className="gap-0 overflow-hidden p-0">
-      <CardHeader className="space-y-3 border-b border-graphite px-5 py-6 sm:px-7 sm:py-7">
-        <CardTitle className="text-[17px] sm:text-[18px]">Apply for this role</CardTitle>
+    <Card
+      className={cn(
+        "min-w-0 gap-0 overflow-hidden p-0",
+        isSidebar &&
+          "lg:rounded-xl lg:border-graphite/80 lg:shadow-[0_8px_24px_rgb(0,0,0,0.28)] lg:ring-1 lg:ring-white/[0.04]"
+      )}
+    >
+      <CardHeader
+        className={cn(
+          "space-y-2 border-b border-graphite px-4 py-4 sm:px-5 sm:py-5"
+        )}
+      >
+        <CardTitle className="text-[16px] sm:text-[17px]">
+          Apply for this role
+        </CardTitle>
         <p className="text-[14px] leading-relaxed text-fog">
           Submit your details and CV. PDF only, up to 4&nbsp;MB.
         </p>
-        <p className="text-[13px] leading-snug text-fog/90">
+        <p
+          className={cn(
+            "text-[13px] leading-snug text-fog/90",
+            isSidebar && "lg:hidden"
+          )}
+        >
           Applying for{" "}
           <span className="font-[510] text-mist">{jobTitle}</span>
         </p>
       </CardHeader>
 
-      <CardContent className="px-5 pb-6 pt-6 sm:px-7 sm:pb-7 sm:pt-7">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-5">
-            <div className="space-y-2.5">
+      <CardContent className="px-4 pb-5 pt-4 sm:px-5 sm:pb-5 sm:pt-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="fullName">Full name</Label>
               <Input
                 id="fullName"
@@ -93,11 +122,11 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
                 required
                 autoComplete="name"
                 placeholder="Your full name"
-                className="h-11 text-[15px] sm:h-12"
+                className="h-10 text-[14px] sm:h-11 sm:text-[15px]"
               />
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
               <Input
                 id="email"
@@ -106,24 +135,26 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="h-11 text-[15px] sm:h-12"
+                className="h-10 text-[14px] sm:h-11 sm:text-[15px]"
               />
               <p className="text-[12px] leading-relaxed text-fog">
                 We&apos;ll use this to contact you about your application.
               </p>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <Label htmlFor="file">Your CV</Label>
               <div
                 className={cn(
-                  "rounded-lg border border-dashed border-graphite bg-obsidian/50 p-4 transition-colors",
+                  "min-w-0 max-w-full overflow-hidden rounded-lg border border-dashed border-graphite bg-obsidian/50 p-2.5 sm:p-3 transition-colors",
                   "focus-within:border-mist/40"
                 )}
               >
-                <div className="mb-3 flex items-center gap-2 text-fog">
+                <div className="mb-2 flex min-w-0 items-center gap-2 text-fog">
                   <FileText className="size-4 shrink-0" aria-hidden />
-                  <span className="text-[12px]">PDF format, maximum 4&nbsp;MB</span>
+                  <span className="min-w-0 text-[12px] leading-snug">
+                    PDF format, maximum 4&nbsp;MB
+                  </span>
                 </div>
                 <Input
                   id="file"
@@ -132,7 +163,8 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
                   accept=".pdf,application/pdf"
                   required
                   className={cn(
-                    "h-auto min-h-11 w-full border-0 bg-transparent px-0 py-2 text-[14px] file:mr-4 file:rounded-md file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-[13px] file:font-[510] file:text-mist hover:file:bg-white/15"
+                    "block h-auto min-h-11 w-full min-w-0 max-w-full overflow-hidden border-0 bg-transparent px-0 py-2 text-[13px] sm:text-[14px]",
+                    "file:mr-0 file:mb-2 file:block file:max-w-full file:truncate file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-[12px] file:font-[510] file:text-mist sm:file:mr-4 sm:file:mb-0 sm:file:inline sm:file:max-w-none sm:file:px-4 sm:file:text-[13px] hover:file:bg-white/15"
                   )}
                 />
               </div>
@@ -148,10 +180,10 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
             </p>
           )}
 
-          <div className="space-y-3 border-t border-graphite pt-6">
+          <div className="space-y-2.5 border-t border-graphite pt-4">
             <Button
               type="submit"
-              className="h-11 w-full text-[15px] sm:h-12"
+              className="h-10 w-full text-[14px] sm:h-11 sm:text-[15px]"
               disabled={loading}
             >
               {loading ? "Submitting…" : "Submit application"}

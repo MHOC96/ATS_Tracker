@@ -52,12 +52,30 @@ export const CANDIDATE_EXTRACTION_RESPONSE_SCHEMA: Schema = {
         },
       },
     },
+    profileLinks: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          label: { type: Type.STRING },
+          url: { type: Type.STRING },
+        },
+        required: ["label", "url"],
+      },
+    },
     extractionConfidence: { type: Type.NUMBER, nullable: true },
   },
-  required: ["skills", "education", "experience", "certifications", "projects"],
+  required: [
+    "skills",
+    "education",
+    "experience",
+    "certifications",
+    "projects",
+    "profileLinks",
+  ],
 };
 
-export const EXTRACTION_PROMPT_VERSION = "cv-extract-v2";
+export const EXTRACTION_PROMPT_VERSION = "cv-extract-v3";
 
 export const BASE_EXTRACTION_RULES = `You extract structured candidate data from a CV for recruitment screening.
 
@@ -66,5 +84,6 @@ Rules:
 - Do NOT invent information; use null for missing scalar fields.
 - Use empty arrays when lists are empty.
 - skills: concise skill names only (no long sentences).
+- profileLinks: every URL or social/profile link on the CV (LinkedIn, GitHub, portfolio, Twitter/X, Behance, personal site, etc.). Use a short label (e.g. "LinkedIn", "GitHub", "Portfolio") and the URL or handle path as written on the CV. Do not invent links.
 - Prefer facts from the document; apply-form hints may fill missing name/email only when the CV omits them.
 - extractionConfidence: 0-1 estimate of how readable and complete the CV was.`;

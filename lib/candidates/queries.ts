@@ -21,6 +21,11 @@ export type CriterionScoreRow = {
   criterionWeight: number;
 };
 
+export type ProfileLink = {
+  label: string;
+  url: string;
+};
+
 export type CandidateApplicationDetail = {
   id: string;
   status: string;
@@ -44,6 +49,7 @@ export type CandidateApplicationDetail = {
     gpa: number | null;
     yearsExperience: number | null;
     skills: string[];
+    profileLinks: ProfileLink[];
   } | null;
   score: {
     id: string;
@@ -152,7 +158,8 @@ export async function getCandidateApplicationDetail(
           degree,
           gpa,
           years_experience,
-          skills
+          skills,
+          profile_links
         )
       ),
       jobs(id, title, slug)
@@ -219,6 +226,7 @@ export async function getCandidateApplicationDetail(
           gpa: number | null;
           years_experience: number | null;
           skills: string[] | null;
+          profile_links: ProfileLink[] | null;
         }>
       | {
           university: string | null;
@@ -226,6 +234,7 @@ export async function getCandidateApplicationDetail(
           gpa: number | null;
           years_experience: number | null;
           skills: string[] | null;
+          profile_links: ProfileLink[] | null;
         }
       | null;
   };
@@ -268,6 +277,12 @@ export async function getCandidateApplicationDetail(
               ? Number(profileRow.years_experience)
               : null,
           skills: profileRow.skills ?? [],
+          profileLinks: Array.isArray(profileRow.profile_links)
+            ? profileRow.profile_links.filter(
+                (link): link is ProfileLink =>
+                  Boolean(link?.label?.trim() && link?.url?.trim())
+              )
+            : [],
         }
       : null,
     score: latestScore

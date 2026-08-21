@@ -32,4 +32,5 @@ export async function setPlatformSetting(key: string, value: string): Promise<vo
 export const PLATFORM_SETTING_KEYS = {
   googleRefreshToken: "google_oauth_refresh_token",
   googleConnectedEmail: "google_oauth_connected_email",
+  googleConnectCooldownUntil: "google_oauth_connect_cooldown_until",
 } as const;

@@ -2,16 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Sparkles, Trash2 } from "lucide-react";
 import { updateJob } from "@/lib/jobs/actions";
 import { generateJobDescription } from "@/lib/jobs/generate-actions";
 import type { JobEditData } from "@/lib/jobs/queries";
 import {
-  JOB_TYPE_OPTIONS,
   updateJobSchema,
+  type JobFormValues,
 } from "@/lib/validation/job-form";
+import { JobTypeFields } from "@/components/jobs/job-type-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,8 @@ export function EditJobForm({ job }: EditJobFormProps) {
       jobId: job.id,
       title: job.title,
       jobType: job.jobType as FormValues["jobType"],
+      hiringPeriodStart: job.hiringPeriodStart,
+      hiringPeriodEnd: job.hiringPeriodEnd,
       description: job.description,
       responsibilities: job.responsibilities,
       requirements: job.requirements,
@@ -140,26 +143,7 @@ export function EditJobForm({ job }: EditJobFormProps) {
             <Input id="title" {...form.register("title")} />
           </div>
 
-          <div className="space-y-2">
-            <Label>Job type</Label>
-            <Select
-              value={form.watch("jobType")}
-              onValueChange={(value) => {
-                if (value) form.setValue("jobType", value as FormValues["jobType"]);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {JOB_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <JobTypeFields form={form as unknown as UseFormReturn<JobFormValues>} />
 
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="description">Description</Label>

@@ -15,9 +15,13 @@ let refreshTokenCacheExpiresAt = 0;
 export const GOOGLE_OAUTH_SCOPES = [DRIVE_SCOPE, USERINFO_EMAIL_SCOPE];
 
 export function getOAuthRedirectUri(origin: string) {
-  const configured = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+  const configured = process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim();
   if (configured) return configured;
-  return `${origin}/api/google/callback`;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (appUrl) return `${appUrl}/api/google/callback`;
+
+  return `${origin.replace(/\/$/, "")}/api/google/callback`;
 }
 
 export function isOAuthCredentialsConfigured(): boolean {

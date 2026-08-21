@@ -23,10 +23,11 @@ export function JobManageActions({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<"close" | "archive" | "delete" | null>(null);
 
-  if (!canManage || status === "ARCHIVED") {
+  if (!canManage) {
     return null;
   }
 
+  const isArchived = status === "ARCHIVED";
   const canDeleteDraft = status === "DRAFT" && applicationCount === 0;
 
   async function handleClose() {
@@ -72,11 +73,13 @@ export function JobManageActions({
   }
 
   async function handleDelete() {
-    if (
-      !confirm(
-        "Permanently delete this draft job? This cannot be undone."
-      )
-    ) {
+    const message = isArchived
+      ? applicationCount > 0
+        ? `Permanently delete this archived job and all ${applicationCount} application record(s)? CV files remain in Google Drive. This cannot be undone.`
+        : "Permanently delete this archived job? This cannot be undone."
+      : "Permanently delete this draft job? This cannot be undone.";
+
+    if (!confirm(message)) {
       return;
     }
 
@@ -93,6 +96,38 @@ export function JobManageActions({
 
     router.push("/admin/jobs");
     router.refresh();
+  }
+
+  if (isArchived) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Delete archived job</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Permanently removes this archived job from the system.
+            {applicationCount > 0
+              ? ` ${applicationCount} application record(s) will also be deleted. CV files stay in Google Drive.`
+              : ""}
+          </p>
+          <Button
+            type="button"
+            variant="destructive"
+            className="w-full sm:w-auto"
+            disabled={loading !== null}
+            onClick={handleDelete}
+          >
+            {loading === "delete" ? "Deleting…" : "Delete archived job"}
+          </Button>
+          {error && (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

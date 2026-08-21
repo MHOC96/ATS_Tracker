@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PublicFooter } from "@/components/public/public-footer";
 import { PublicHeader } from "@/components/public/public-header";
 
 export const metadata: Metadata = {
@@ -15,18 +16,15 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-void">
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-void">
       <PublicHeader />
-      <main className="flex-1">
-        <div className="linear-page px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
+      <main className="min-w-0 flex-1 overflow-x-hidden">
+        <div className="linear-page min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
           {children}
         </div>
       </main>
-      <footer className="border-t border-graphite px-4 py-6 text-center linear-caption sm:px-6 sm:py-8">
-        <p>Browse open roles and apply with your CV.</p>
-        <p className="mt-2 text-fog/80">
-          © {new Date().getFullYear()} mhoc
-        </p>
+      <footer className="mt-auto">
+        <PublicFooter />
       </footer>
     </div>
   );

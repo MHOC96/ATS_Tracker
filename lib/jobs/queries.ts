@@ -6,6 +6,8 @@ export type PublicJob = {
   title: string;
   slug: string;
   jobType: string;
+  hiringPeriodStart: string | null;
+  hiringPeriodEnd: string | null;
   description: string | null;
   responsibilities: string | null;
   requirements: string | null;
@@ -15,13 +17,15 @@ export type PublicJob = {
 };
 
 const PUBLIC_JOB_FIELDS =
-  "id, title, slug, job_type, description, responsibilities, requirements, required_skills, preferred_skills, published_at";
+  "id, title, slug, job_type, hiring_period_start, hiring_period_end, description, responsibilities, requirements, required_skills, preferred_skills, published_at";
 
 function mapPublicJob(row: {
   id: string;
   title: string;
   slug: string;
   job_type: string;
+  hiring_period_start: string | null;
+  hiring_period_end: string | null;
   description: string | null;
   responsibilities: string | null;
   requirements: string | null;
@@ -34,6 +38,8 @@ function mapPublicJob(row: {
     title: row.title,
     slug: row.slug,
     jobType: row.job_type,
+    hiringPeriodStart: row.hiring_period_start,
+    hiringPeriodEnd: row.hiring_period_end,
     description: row.description,
     responsibilities: row.responsibilities,
     requirements: row.requirements,
@@ -112,6 +118,8 @@ export type JobEditData = {
   slug: string;
   status: string;
   jobType: string;
+  hiringPeriodStart: string;
+  hiringPeriodEnd: string;
   description: string;
   responsibilities: string;
   requirements: string;
@@ -142,6 +150,8 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
       slug,
       status,
       job_type,
+      hiring_period_start,
+      hiring_period_end,
       description,
       responsibilities,
       requirements,
@@ -194,6 +204,8 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
     slug: job.slug,
     status: job.status,
     jobType: job.job_type,
+    hiringPeriodStart: job.hiring_period_start ?? "",
+    hiringPeriodEnd: job.hiring_period_end ?? "",
     description: job.description ?? "",
     responsibilities: job.responsibilities ?? "",
     requirements: job.requirements ?? "",

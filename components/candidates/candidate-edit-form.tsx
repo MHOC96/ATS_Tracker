@@ -3,21 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateCandidate } from "@/lib/candidates/actions";
-import { applicationStatusSchema } from "@/packages/shared/schemas";
-import type { z } from "zod";
-
-type ApplicationStatus = z.infer<typeof applicationStatusSchema>;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type CandidateEditFormProps = {
   applicationId: string;
@@ -25,14 +15,9 @@ type CandidateEditFormProps = {
   initialEmail: string | null;
   initialPhone: string | null;
   initialLocation: string | null;
-  initialStatus: string;
   canEdit: boolean;
+  className?: string;
 };
-
-const statusOptions = applicationStatusSchema.options.map((value) => ({
-  value,
-  label: value.replace(/_/g, " "),
-}));
 
 export function CandidateEditForm({
   applicationId,
@@ -40,17 +25,14 @@ export function CandidateEditForm({
   initialEmail,
   initialPhone,
   initialLocation,
-  initialStatus,
   canEdit,
+  className,
 }: CandidateEditFormProps) {
   const router = useRouter();
   const [fullName, setFullName] = useState(initialFullName);
   const [email, setEmail] = useState(initialEmail ?? "");
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [location, setLocation] = useState(initialLocation ?? "");
-  const [status, setStatus] = useState<ApplicationStatus>(
-    initialStatus as ApplicationStatus
-  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -69,7 +51,6 @@ export function CandidateEditForm({
       email,
       phone,
       location,
-      status,
     });
 
     if (!result.success) {
@@ -83,11 +64,11 @@ export function CandidateEditForm({
   }
 
   return (
-    <Card>
+    <Card className={cn("min-w-0", className)}>
       <CardHeader>
         <CardTitle>Edit candidate</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-w-0">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full name</Label>
@@ -96,27 +77,34 @@ export function CandidateEditForm({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              className="text-base sm:text-[14px]"
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="text-base sm:text-[14px]"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="text-base sm:text-[14px]"
+            />
           </div>
 
           <div className="space-y-2">
@@ -125,29 +113,14 @@ export function CandidateEditForm({
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              className="text-base sm:text-[14px]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Application status</Label>
-            <Select
-              value={status}
-              onValueChange={(value) => {
-                if (value) setStatus(value as ApplicationStatus);
-              }}
-            >
-              <SelectTrigger id="status" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <p className="text-[12px] leading-relaxed text-fog">
+            Use Recruiter outcome below to change pipeline status. That keeps a
+            decision history with optional notes.
+          </p>
 
           {error && (
             <p className="text-sm text-destructive" role="alert">

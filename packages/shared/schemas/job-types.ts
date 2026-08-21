@@ -1,12 +1,7 @@
 import { z } from "zod";
 
-export const jobTypeSchema = z.enum([
-  "FULL_TIME",
-  "PART_TIME",
-  "INTERNSHIP",
-  "CONTRACT",
-  "TEMPORARY",
-]);
+/** Job types available when creating or editing vacancies. */
+export const jobTypeSchema = z.enum(["FULL_TIME", "INTERNSHIP", "CONTRACT"]);
 
 export const jobStatusSchema = z.enum([
   "DRAFT",
@@ -14,3 +9,9 @@ export const jobStatusSchema = z.enum([
   "CLOSED",
   "ARCHIVED",
 ]);
+
+export function jobTypeRequiresHiringPeriod(
+  jobType: z.infer<typeof jobTypeSchema>
+): boolean {
+  return jobType === "INTERNSHIP" || jobType === "CONTRACT";
+}

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CandidateEditForm } from "@/components/candidates/candidate-edit-form";
 import { ApplicationDeleteButton } from "@/components/candidates/application-delete-button";
+import { ApplicationPipelineBadges } from "@/components/candidates/application-status-badge";
+import { CandidateEditForm } from "@/components/candidates/candidate-edit-form";
 import { DecisionForm } from "@/components/candidates/decision-form";
 import { ScoreSummary } from "@/components/candidates/score-summary";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireSessionUser } from "@/lib/auth/session";
 import { getCandidateApplicationDetail } from "@/lib/candidates/queries";
 import { cn } from "@/lib/utils";
+import { formatAdminDecision } from "@/packages/shared/schemas";
 
 type CandidateDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -49,11 +51,15 @@ export default async function CandidateDetailPage({
             {new Date(application.appliedAt).toLocaleDateString()}
           </p>
         </div>
-        <Badge variant="outline">{application.status}</Badge>
+        <ApplicationPipelineBadges
+          status={application.status}
+          hasAiScore={application.score !== null}
+          className="mx-auto w-full sm:ml-auto sm:mr-0 sm:max-w-[18rem]"
+        />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_min(100%,360px)]">
-        <div className="space-y-8">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_min(100%,28rem)]">
+        <div className="min-w-0 space-y-8">
           <Card>
             <CardHeader>
               <CardTitle>
@@ -103,6 +109,25 @@ export default async function CandidateDetailPage({
                       ))}
                     </div>
                   )}
+                  {application.profile.profileLinks.length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <p className="text-muted-foreground">Links</p>
+                      <ul className="space-y-1">
+                        {application.profile.profileLinks.map((link) => (
+                          <li key={`${link.label}-${link.url}`}>
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm underline underline-offset-4 break-all"
+                            >
+                              {link.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </>
               )}
               {application.driveFileUrl && (
@@ -140,7 +165,7 @@ export default async function CandidateDetailPage({
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <Badge variant="outline">
-                  {application.latestDecision.decision.replace(/_/g, " ")}
+                  {formatAdminDecision(application.latestDecision.decision)}
                 </Badge>
                 {application.latestDecision.notes && (
                   <p className="text-muted-foreground">
@@ -155,20 +180,21 @@ export default async function CandidateDetailPage({
           )}
         </div>
 
-        <div className="lg:sticky lg:top-8 lg:self-start space-y-8">
+        <div className="min-w-0 grid gap-8 md:grid-cols-2 xl:grid-cols-1 xl:sticky xl:top-8 xl:self-start">
           <CandidateEditForm
             applicationId={application.id}
             initialFullName={application.candidate.fullName ?? ""}
             initialEmail={application.candidate.email}
             initialPhone={application.candidate.phone}
             initialLocation={application.candidate.location}
-            initialStatus={application.status}
             canEdit={canEdit}
+            className="md:col-span-2 xl:col-span-1"
           />
           <DecisionForm applicationId={application.id} canDecide={canDecide} />
           <ApplicationDeleteButton
             applicationId={application.id}
             canDelete={canDelete}
+            className="md:col-span-2 xl:col-span-1"
           />
         </div>
       </div>

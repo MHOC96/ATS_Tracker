@@ -27,7 +27,8 @@ export function JobRowActions({
   if (!canManage) return null;
 
   const canEdit = status !== "ARCHIVED";
-  const canDelete = status === "DRAFT" && applicationCount === 0;
+  const canDelete =
+    (status === "DRAFT" && applicationCount === 0) || status === "ARCHIVED";
   const canArchive = status !== "ARCHIVED";
 
   async function handleArchive() {
@@ -55,11 +56,14 @@ export function JobRowActions({
   }
 
   async function handleDelete() {
-    if (
-      !confirm(
-        "Permanently delete this draft job? This cannot be undone."
-      )
-    ) {
+    const message =
+      status === "ARCHIVED"
+        ? applicationCount > 0
+          ? `Permanently delete this archived job and all ${applicationCount} application record(s)? CV files remain in Google Drive. This cannot be undone.`
+          : "Permanently delete this archived job? This cannot be undone."
+        : "Permanently delete this draft job? This cannot be undone.";
+
+    if (!confirm(message)) {
       return;
     }
 

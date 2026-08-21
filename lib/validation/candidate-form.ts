@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { applicationStatusSchema } from "@/packages/shared/schemas";
 
 export const updateCandidateSchema = z.object({
   applicationId: z.string().uuid(),
@@ -11,7 +10,6 @@ export const updateCandidateSchema = z.object({
     .optional(),
   phone: z.string().optional(),
   location: z.string().optional(),
-  status: applicationStatusSchema.optional(),
 });
 
 export const deleteApplicationSchema = z.object({

@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveAdminDecision } from "@/lib/candidates/actions";
+import {
+  recruiterOutcomeOptions,
+  type RecruiterOutcomeStatus,
+} from "@/packages/shared/schemas";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,26 +18,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type DecisionFormProps = {
   applicationId: string;
   canDecide: boolean;
+  className?: string;
 };
 
-const decisions = [
-  { value: "SHORTLIST", label: "Shortlist" },
-  { value: "INTERVIEW", label: "Interview" },
-  { value: "HOLD", label: "Hold" },
-  { value: "REJECT", label: "Reject" },
-  { value: "MANUAL_REVIEW", label: "Manual review" },
-] as const;
-
-export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
+export function DecisionForm({
+  applicationId,
+  canDecide,
+  className,
+}: DecisionFormProps) {
   const router = useRouter();
-  const [decision, setDecision] = useState<string>("");
+  const [status, setStatus] = useState<RecruiterOutcomeStatus | "">("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const selectedOption = recruiterOutcomeOptions.find(
+    (item) => item.value === status
+  );
 
   if (!canDecide) {
     return (
@@ -48,8 +54,8 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!decision) {
-      setError("Select a decision");
+    if (!status) {
+      setError("Select a recruiter outcome");
       return;
     }
 
@@ -58,7 +64,7 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
 
     const result = await saveAdminDecision({
       applicationId,
-      decision: decision as (typeof decisions)[number]["value"],
+      status,
       notes,
     });
 
@@ -71,38 +77,50 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
     router.refresh();
     setLoading(false);
     setNotes("");
-    setDecision("");
+    setStatus("");
   }
 
   return (
-    <Card>
+    <Card className={cn("min-w-0", className)}>
       <CardHeader>
-        <CardTitle>Recruiter decision</CardTitle>
+        <CardTitle>Recruiter outcome</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-w-0">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="decision">Decision</Label>
+            <Label htmlFor="decision-status">Outcome</Label>
             <Select
-              value={decision}
-              onValueChange={(value) => setDecision(value ?? "")}
+              value={status}
+              onValueChange={(value) =>
+                setStatus((value as RecruiterOutcomeStatus | null) ?? "")
+              }
             >
-              <SelectTrigger id="decision" className="w-full">
-                <SelectValue placeholder="Select decision" />
+              <SelectTrigger id="decision-status" className="h-10 w-full min-w-0">
+                <SelectValue placeholder="Select outcome" />
               </SelectTrigger>
               <SelectContent>
-                {decisions.map((item) => (
+                {recruiterOutcomeOptions.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
                     {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedOption && (
+              <p className="text-[12px] leading-relaxed text-fog">
+                {selectedOption.description}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-24 w-full min-w-0 resize-y text-base sm:text-[14px]"
+            />
           </div>
 
           {error && (
@@ -112,7 +130,7 @@ export function DecisionForm({ applicationId, canDecide }: DecisionFormProps) {
           )}
 
           <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
-            {loading ? "Saving…" : "Save decision"}
+            {loading ? "Saving…" : "Save outcome"}
           </Button>
         </form>
       </CardContent>
