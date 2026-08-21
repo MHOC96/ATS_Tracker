@@ -164,7 +164,7 @@ Copy from `.env.example`. Split between Vercel and Railway in production.
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key |
 | `GEMINI_API_KEY` | CV extraction |
 | `GROQ_API_KEY` | Candidate scoring |
-| `VISION_MODEL` | e.g. `gemini-2.0-flash` |
+| `VISION_MODEL` | e.g. `gemini-3.6-flash` |
 | `REASONING_MODEL` | e.g. `openai/gpt-oss-120b` |
 | `GOOGLE_OAUTH_*` | Drive download/move |
 | `GOOGLE_DRIVE_*_ROOT_ID` | Same folder IDs as Vercel |
