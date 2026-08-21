@@ -7,9 +7,6 @@ export const MAX_CV_VISION_PAGES = 3;
 /** Minimum extracted PDF text length to skip vision and use text-only extraction. */
 export const MIN_PDF_TEXT_CHARS_FOR_TEXT_PATH = 400;
 
-export const ALLOWED_CV_MIME_TYPES = [
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-] as const;
+export const ALLOWED_CV_MIME_TYPES = ["application/pdf"] as const;
+
+export const CV_FILE_ACCEPT = ".pdf,application/pdf";

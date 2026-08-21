@@ -4,6 +4,7 @@ import {
   MAX_CV_FILE_SIZE_BYTES,
   MAX_CV_VISION_PAGES,
   MIN_PDF_TEXT_CHARS_FOR_TEXT_PATH,
+  isPdfCv,
 } from "../cv-limits.js";
 
 const require = createRequire(import.meta.url);
@@ -58,52 +59,43 @@ export async function prepareCvForExtraction(
 ): Promise<PreparedCvInput> {
   assertCvSizeWithinLimit(buffer);
 
-  const normalizedMime =
-    mimeType === "application/pdf" || buffer.slice(0, 4).toString() === "%PDF"
-      ? "application/pdf"
-      : mimeType;
+  if (!isPdfCv(mimeType, buffer)) {
+    throw new Error("Only PDF CV files are supported");
+  }
 
-  if (normalizedMime === "application/pdf") {
-    try {
-      const text = await extractPdfText(buffer);
-      if (text.length >= MIN_PDF_TEXT_CHARS_FOR_TEXT_PATH) {
-        return {
-          buffer,
-          mimeType: normalizedMime,
-          extractedText: text.slice(0, 12000),
-          usedTextPath: true,
-          visionPageCount: null,
-        };
-      }
-    } catch {
-      // fall through to vision
-    }
+  const normalizedMime = "application/pdf";
 
-    try {
-      const limited = await limitPdfPages(buffer, MAX_CV_VISION_PAGES);
-      return {
-        buffer: limited.buffer,
-        mimeType: normalizedMime,
-        extractedText: null,
-        usedTextPath: false,
-        visionPageCount: limited.pageCount,
-      };
-    } catch {
+  try {
+    const text = await extractPdfText(buffer);
+    if (text.length >= MIN_PDF_TEXT_CHARS_FOR_TEXT_PATH) {
       return {
         buffer,
         mimeType: normalizedMime,
-        extractedText: null,
-        usedTextPath: false,
+        extractedText: text.slice(0, 12000),
+        usedTextPath: true,
         visionPageCount: null,
       };
     }
+  } catch {
+    // fall through to vision
   }
 
-  return {
-    buffer,
-    mimeType: normalizedMime,
-    extractedText: null,
-    usedTextPath: false,
-    visionPageCount: null,
-  };
+  try {
+    const limited = await limitPdfPages(buffer, MAX_CV_VISION_PAGES);
+    return {
+      buffer: limited.buffer,
+      mimeType: normalizedMime,
+      extractedText: null,
+      usedTextPath: false,
+      visionPageCount: limited.pageCount,
+    };
+  } catch {
+    return {
+      buffer,
+      mimeType: normalizedMime,
+      extractedText: null,
+      usedTextPath: false,
+      visionPageCount: null,
+    };
+  }
 }

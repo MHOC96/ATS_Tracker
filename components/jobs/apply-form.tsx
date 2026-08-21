@@ -61,7 +61,7 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
       <CardHeader>
         <CardTitle className="font-mono text-lg font-normal">Apply for this role</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Submit your details and CV. PDF or image files up to 4 MB.
+          Submit your details and CV. PDF only, up to 4 MB.
         </p>
       </CardHeader>
       <CardContent>
@@ -84,12 +84,12 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">CV (PDF or image)</Label>
+            <Label htmlFor="file">CV (PDF only)</Label>
             <Input
               id="file"
               name="file"
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              accept=".pdf,application/pdf"
               required
             />
           </div>

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   ALLOWED_CV_MIME_TYPES,
+  CV_FILE_ACCEPT,
   MAX_CV_FILE_SIZE_BYTES,
 } from "@/packages/shared/schemas/cv";
 
@@ -9,7 +10,7 @@ export const publicApplySchema = z.object({
   email: z.string().email("A valid email is required"),
 });
 
-export { ALLOWED_CV_MIME_TYPES, MAX_CV_FILE_SIZE_BYTES };
+export { ALLOWED_CV_MIME_TYPES, CV_FILE_ACCEPT, MAX_CV_FILE_SIZE_BYTES };
 
 export function validateCvFile(file: File): string | null {
   if (file.size === 0) return "A CV file is required";
@@ -18,12 +19,11 @@ export function validateCvFile(file: File): string | null {
   }
 
   const mime = file.type || "application/octet-stream";
-  const allowed =
-    ALLOWED_CV_MIME_TYPES.includes(mime as (typeof ALLOWED_CV_MIME_TYPES)[number]) ||
-    file.name.toLowerCase().endsWith(".pdf");
+  const isPdf =
+    mime === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
-  if (!allowed) {
-    return "Upload a PDF or image file (PNG, JPG, WEBP)";
+  if (!isPdf) {
+    return "Upload a PDF file only";
   }
 
   return null;
