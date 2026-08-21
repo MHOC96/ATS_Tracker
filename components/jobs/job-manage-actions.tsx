@@ -98,7 +98,7 @@ export function JobManageActions({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">Manage job</CardTitle>
+        <CardTitle>Manage job</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {status === "PUBLISHED" && (

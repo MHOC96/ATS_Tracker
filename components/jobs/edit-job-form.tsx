@@ -121,7 +121,7 @@ export function EditJobForm({ job }: EditJobFormProps) {
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <CardTitle className="font-mono text-lg font-normal">Job details</CardTitle>
+          <CardTitle>Job details</CardTitle>
           <Button
             type="button"
             variant="outline"
@@ -191,7 +191,7 @@ export function EditJobForm({ job }: EditJobFormProps) {
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="font-mono text-lg font-normal">Scoring model</CardTitle>
+            <CardTitle>Scoring model</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
               Weights must total 100% — current: {weightTotal}%
             </p>
@@ -229,17 +229,17 @@ export function EditJobForm({ job }: EditJobFormProps) {
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="grid gap-3 rounded-md border border-border p-4 sm:grid-cols-12"
+              className="grid gap-3 rounded-md border border-border p-4 md:grid-cols-12"
             >
-              <div className="space-y-2 sm:col-span-4">
+              <div className="space-y-2 md:col-span-4">
                 <Label>Name</Label>
                 <Input {...form.register(`criteria.${index}.name`)} />
               </div>
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label>Weight %</Label>
                 <Input type="number" {...form.register(`criteria.${index}.weight`)} />
               </div>
-              <div className="space-y-2 sm:col-span-3">
+              <div className="space-y-2 md:col-span-3">
                 <Label>Type</Label>
                 <Select
                   value={form.watch(`criteria.${index}.criteriaType`)}
@@ -260,7 +260,7 @@ export function EditJobForm({ job }: EditJobFormProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end sm:col-span-3">
+              <div className="flex items-end justify-end md:col-span-3">
                 <Button
                   type="button"
                   variant="ghost"

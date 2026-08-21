@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono-ui",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "ATS — AI Recruitment Platform",
-  description:
-    "Autonomous AI recruitment management platform for hiring teams.",
+  title: {
+    default: "Recruitment Admin",
+    template: "%s — Recruitment Admin",
+  },
+  description: "Manage jobs, candidates, and hiring workflows.",
 };
 
 export const viewport = {
@@ -31,9 +35,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} dark h-full`}
     >
-      <body className="min-h-full flex flex-col overflow-x-hidden font-sans">{children}</body>
+      <body className="min-h-full flex flex-col overflow-x-hidden bg-void text-paper">
+        {children}
+      </body>
     </html>
   );
 }

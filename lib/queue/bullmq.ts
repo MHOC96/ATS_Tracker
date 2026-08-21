@@ -1,0 +1,69 @@
+import { Queue } from "bullmq";
+
+export const CV_SCREENING_QUEUE = "cv-screening";
+
+export type CvScreeningJobData = {
+  applicationId: string;
+};
+
+type RedisConnectionOptions = {
+  host: string;
+  port: number;
+  password?: string;
+  maxRetriesPerRequest: null;
+};
+
+let queue: Queue<CvScreeningJobData> | null = null;
+
+function getRedisUrl(): string | null {
+  const url = process.env.REDIS_URL?.trim();
+  return url || null;
+}
+
+function parseRedisConnection(url: string): RedisConnectionOptions {
+  const parsed = new URL(url);
+  return {
+    host: parsed.hostname,
+    port: Number(parsed.port || 6379),
+    password: parsed.password || undefined,
+    maxRetriesPerRequest: null,
+  };
+}
+
+export function isRedisQueueEnabled(): boolean {
+  return Boolean(getRedisUrl());
+}
+
+export function getCvScreeningQueue(): Queue<CvScreeningJobData> {
+  const redisUrl = getRedisUrl();
+  if (!redisUrl) {
+    throw new Error("REDIS_URL is not configured");
+  }
+
+  if (!queue) {
+    queue = new Queue<CvScreeningJobData>(CV_SCREENING_QUEUE, {
+      connection: parseRedisConnection(redisUrl),
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 5000 },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
+    });
+  }
+
+  return queue;
+}
+
+export async function enqueueCvScreeningJob(
+  applicationId: string
+): Promise<void> {
+  const screeningQueue = getCvScreeningQueue();
+  await screeningQueue.add(
+    "screen",
+    { applicationId },
+    {
+      jobId: applicationId,
+    }
+  );
+}

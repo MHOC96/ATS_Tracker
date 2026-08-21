@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EditJobForm } from "@/components/jobs/edit-job-form";
+import { PageTitle } from "@/components/layout/page-title";
 import { buttonVariants } from "@/components/ui/button";
 import { getJobForEdit } from "@/lib/jobs/queries";
 import { cn } from "@/lib/utils";
@@ -28,10 +29,10 @@ export default async function EditJobPage({ params }: EditJobPageProps) {
         >
           ← Back to job
         </Link>
-        <h1 className="font-mono text-xl tracking-tight sm:text-2xl">Edit job</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Update {job.title} ({job.status.replace(/_/g, " ")})
-        </p>
+        <PageTitle
+          title="Edit job"
+          description={`Update ${job.title} (${job.status.replace(/_/g, " ")})`}
+        />
       </div>
 
       <EditJobForm job={job} />

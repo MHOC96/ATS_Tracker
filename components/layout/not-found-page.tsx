@@ -10,7 +10,6 @@ type NotFoundPageProps = {
   homeLabel?: string;
   secondaryHref?: string;
   secondaryLabel?: string;
-  /** When true, fills the viewport (for root-level 404 without a layout shell). */
   fullPage?: boolean;
 };
 
@@ -31,17 +30,15 @@ export function NotFoundPage({
       )}
     >
       <div className="mx-auto flex max-w-md flex-col items-center">
-        <div className="mb-6 flex size-14 items-center justify-center rounded-md border border-border bg-muted/40 sm:size-16">
-          <SearchX className="size-6 text-muted-foreground sm:size-7" aria-hidden />
+        <div className="mb-6 flex size-14 items-center justify-center rounded-md border border-graphite bg-obsidian sm:size-16">
+          <SearchX className="size-6 text-fog sm:size-7" aria-hidden />
         </div>
 
-        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          404
-        </p>
-        <h1 className="mt-3 font-mono text-2xl tracking-tight sm:text-3xl">
+        <p className="linear-mono text-fog uppercase tracking-wider">404</p>
+        <h1 className="mt-3 text-[24px] font-[510] tracking-[-0.012em] text-paper sm:text-[32px]">
           {title}
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="mt-3 text-[13px] leading-relaxed text-fog sm:text-[15px]">
           {description}
         </p>
 

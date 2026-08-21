@@ -24,9 +24,9 @@ export default async function PublicJobDetailPage({ params }: JobDetailPageProps
   if (!job) notFound();
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_min(100%,360px)] lg:gap-10">
+    <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,1fr)_min(100%,26rem)] lg:items-start lg:gap-12 xl:grid-cols-[minmax(0,1fr)_28rem]">
       <JobPublicView job={job} />
-      <div className="lg:sticky lg:top-8 lg:self-start">
+      <div className="w-full lg:sticky lg:top-8 lg:self-start">
         <ApplyForm jobSlug={job.slug} jobTitle={job.title} />
       </div>
     </div>

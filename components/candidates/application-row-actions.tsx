@@ -21,11 +21,14 @@ export function ApplicationRowActions({
   if (!canEdit && !canDelete) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
       {canEdit && (
         <Link
           href={`/admin/candidates/${applicationId}`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "w-full justify-center sm:w-auto"
+          )}
         >
           View
         </Link>
@@ -36,6 +39,7 @@ export function ApplicationRowActions({
           redirectTo={redirectAfterDelete}
           variant="inline"
           canDelete={canDelete}
+          className="w-full justify-center sm:w-auto"
         />
       )}
     </div>

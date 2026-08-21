@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminUser } from "@/lib/auth/session";
 import {
   createJobDriveFolders,
@@ -223,6 +223,8 @@ export async function publishJob(
 
     revalidatePath("/admin/jobs");
     revalidatePath(`/admin/jobs/${job.id}`);
+    revalidateTag("jobs", "max");
+    revalidateTag(`job:${job.slug}`, "max");
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
     return {
@@ -360,6 +362,8 @@ export async function updateJob(
     revalidatePath(`/admin/jobs/${job.id}/edit`);
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${job.slug}`);
+    revalidateTag("jobs", "max");
+    revalidateTag(`job:${job.slug}`, "max");
 
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
@@ -412,6 +416,8 @@ export async function closeJob(
     revalidatePath(`/admin/jobs/${job.id}`);
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${job.slug}`);
+    revalidateTag("jobs", "max");
+    revalidateTag(`job:${job.slug}`, "max");
 
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
@@ -464,6 +470,8 @@ export async function archiveJob(
     revalidatePath(`/admin/jobs/${job.id}`);
     revalidatePath("/jobs");
     revalidatePath(`/jobs/${job.slug}`);
+    revalidateTag("jobs", "max");
+    revalidateTag(`job:${job.slug}`, "max");
 
     return { success: true, data: { jobId: job.id } };
   } catch (error) {

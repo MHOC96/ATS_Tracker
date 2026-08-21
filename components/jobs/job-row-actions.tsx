@@ -78,19 +78,21 @@ export function JobRowActions({
     setLoading(null);
   }
 
+  const actionClass = "w-full justify-center sm:w-auto";
+
   return (
-    <div className="flex flex-col gap-2 sm:items-end">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
         <Link
           href={`/admin/jobs/${jobId}`}
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }), actionClass)}
         >
           View
         </Link>
         {canEdit && (
           <Link
             href={`/admin/jobs/${jobId}/edit`}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), actionClass)}
           >
             Edit
           </Link>
@@ -100,6 +102,7 @@ export function JobRowActions({
             type="button"
             variant="outline"
             size="sm"
+            className={actionClass}
             disabled={loading !== null}
             onClick={handleArchive}
           >
@@ -111,6 +114,7 @@ export function JobRowActions({
             type="button"
             variant="destructive"
             size="sm"
+            className={actionClass}
             disabled={loading !== null}
             onClick={handleDelete}
           >

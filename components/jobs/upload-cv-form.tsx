@@ -40,7 +40,7 @@ export function UploadCvForm({ jobId, jobTitle }: UploadCvFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg font-normal">Upload CV</CardTitle>
+        <CardTitle>Upload CV</CardTitle>
         <p className="text-sm text-muted-foreground">
           Upload a candidate CV for {jobTitle}. File goes to Incoming_CVs and AI
           processing is queued on the worker.

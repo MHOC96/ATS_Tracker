@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getSafeRedirectPath } from "@/lib/security/safe-redirect";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirectTo = searchParams.get("redirect") ?? "/admin";
+  const redirectTo = getSafeRedirectPath(searchParams.get("redirect"), "/admin");
 
   if (code) {
     const supabase = await createClient();

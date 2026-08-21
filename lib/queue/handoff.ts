@@ -1,6 +1,6 @@
 /**
- * Queue handoff from Vercel API gateway to Railway worker.
- * Next.js / Vercel -> Queue -> Railway Worker -> Gemini + Groq -> Supabase
+ * HTTP fallback handoff from Vercel API gateway to Railway worker.
+ * Prefer BullMQ via lib/queue/enqueue.ts when REDIS_URL is set.
  */
 
 const HANDOFF_TIMEOUT_MS = 5000;
@@ -65,14 +65,4 @@ export async function queueApplicationProcessing(
   } finally {
     clearTimeout(timeoutId);
   }
-}
-
-/** Fire-and-forget handoff — does not block the caller on Railway latency. */
-export function scheduleApplicationProcessing(applicationId: string): void {
-  void queueApplicationProcessing(applicationId).catch((error) => {
-    console.error(
-      `[queue] handoff failed for application ${applicationId}:`,
-      error instanceof Error ? error.message : error
-    );
-  });
 }

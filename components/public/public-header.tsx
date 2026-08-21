@@ -1,34 +1,25 @@
 import Link from "next/link";
-import { Briefcase } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function PublicHeader() {
   return (
-    <header className="border-b border-border bg-background">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-4 sm:py-4 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-graphite/80 bg-void/95 backdrop-blur-sm">
+      <div className="linear-page flex items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-2 font-mono text-sm tracking-tight"
+          className="inline-flex min-h-11 items-center text-[16px] font-[510] tracking-[-0.011em] text-paper"
         >
-          <Briefcase className="size-4 shrink-0" />
-          <span className="truncate">Careers</span>
+          Careers
         </Link>
-        <nav className="flex shrink-0 items-center gap-2 text-xs sm:gap-4 sm:text-sm">
+        <nav className="flex shrink-0 items-center">
           <Link
             href="/jobs"
-            className="whitespace-nowrap text-muted-foreground hover:text-foreground"
-          >
-            Open roles
-          </Link>
-          <Link
-            href="/login"
             className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "h-8 px-2.5 text-xs sm:h-9 sm:px-3 sm:text-sm"
+              "inline-flex min-h-11 items-center rounded-md px-4 py-2.5 text-[13px] text-mist transition-colors",
+              "hover:bg-white/5 hover:text-paper"
             )}
           >
-            Admin login
+            Open roles
           </Link>
         </nav>
       </div>

@@ -12,23 +12,23 @@ type AdminHeaderProps = {
 
 export function AdminHeader({ user }: AdminHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-3 sm:h-16 sm:gap-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-graphite bg-void/95 px-3 backdrop-blur-sm sm:px-4 lg:px-6">
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <AdminMobileNav userRole={user.role} />
         <div className="min-w-0 lg:hidden">
-          <span className="truncate font-mono text-sm font-medium">ATS Admin</span>
+          <span className="linear-mono text-[13px] text-paper">ATS Admin</span>
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {user.role === "ADMIN" && (
           <Link
             href="/admin/jobs/new"
-            className={cn(buttonVariants({ size: "sm" }), "h-8 px-2.5 sm:h-9 sm:px-3")}
+            className={cn(buttonVariants({ size: "sm" }), "min-h-10 sm:min-h-8")}
             title="Create job"
           >
             <Plus className="size-4" />
-            <span className="hidden sm:inline">Create Job</span>
+            <span className="hidden sm:inline">Create job</span>
           </Link>
         )}
         <UserMenu user={user} />

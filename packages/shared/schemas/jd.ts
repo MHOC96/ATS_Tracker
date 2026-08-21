@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { jobTypeSchema } from "./enums";
+import { jobTypeSchema } from "./job-types";
 
 export const jdGenerationInputSchema = z.object({
   title: z.string().min(1),

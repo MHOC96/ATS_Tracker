@@ -115,6 +115,6 @@ export function buildGoogleAuthorizeUrl(origin: string, state?: string) {
     prompt: "consent",
     scope: GOOGLE_OAUTH_SCOPES,
     include_granted_scopes: true,
-    ...(state ? { state } : {}),
+    state,
   });
 }

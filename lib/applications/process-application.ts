@@ -1,8 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { uploadFileToDriveFolder } from "@/lib/google/drive";
-import { scheduleApplicationProcessing } from "@/lib/queue/handoff";
+import { after } from "next/server";
+import { randomUUID } from "crypto";
+import {
+  buildCvStagingPath,
+  uploadCvToStaging,
+} from "@/lib/storage/cv-staging";
+import { enqueueApplicationProcessing } from "@/lib/queue/enqueue";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-type JobRow = {
+export type ApplicationJobRow = {
   id: string;
   title: string;
   status: string;
@@ -20,24 +26,52 @@ export type CreateApplicationResult =
   | { success: true; applicationId: string; jobTitle: string }
   | { success: false; error: string };
 
+async function markUploadFailed(
+  supabase: SupabaseClient,
+  applicationId: string,
+  message: string
+): Promise<void> {
+  await supabase
+    .from("candidate_applications")
+    .update({ status: "MANUAL_REVIEW" })
+    .eq("id", applicationId);
+
+  await supabase
+    .from("ai_processing_jobs")
+    .update({
+      status: "FAILED",
+      error_message: message,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("candidate_application_id", applicationId)
+    .eq("status", "QUEUED");
+}
+
 export async function createApplicationWithCv(
   supabase: SupabaseClient,
   jobId: string,
   fullName: string | null,
   email: string | null,
-  file: CvFileInput
+  file: CvFileInput,
+  preloadedJob?: ApplicationJobRow
 ): Promise<CreateApplicationResult> {
-  const { data: job, error: jobError } = await supabase
-    .from("jobs")
-    .select("id, title, status, incoming_folder_id")
-    .eq("id", jobId)
-    .single();
+  let typedJob: ApplicationJobRow;
 
-  if (jobError || !job) {
-    return { success: false, error: "Job not found" };
+  if (preloadedJob && preloadedJob.id === jobId) {
+    typedJob = preloadedJob;
+  } else {
+    const { data: job, error: jobError } = await supabase
+      .from("jobs")
+      .select("id, title, status, incoming_folder_id")
+      .eq("id", jobId)
+      .single();
+
+    if (jobError || !job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    typedJob = job as ApplicationJobRow;
   }
-
-  const typedJob = job as JobRow;
 
   if (typedJob.status !== "PUBLISHED") {
     return { success: false, error: "This job is not accepting applications" };
@@ -47,85 +81,54 @@ export async function createApplicationWithCv(
     return { success: false, error: "Job incoming folder is not configured" };
   }
 
-  const { driveFileId, driveFileUrl } = await uploadFileToDriveFolder(
-    typedJob.incoming_folder_id,
-    file.name,
-    file.type || "application/octet-stream",
-    file.buffer
+  const pendingId = randomUUID();
+  const stagingPath = buildCvStagingPath(`pending-${pendingId}`, file.name);
+
+  const { data: rows, error: rpcError } = await supabase.rpc(
+    "create_application_with_pending_cv",
+    {
+      p_job_id: jobId,
+      p_full_name: fullName,
+      p_email: email,
+      p_file_name: file.name,
+      p_mime_type: file.type || "application/pdf",
+      p_file_size: file.size,
+      p_storage_path: stagingPath,
+      p_drive_folder_id: typedJob.incoming_folder_id,
+    }
   );
 
-  const { data: candidate, error: candidateError } = await supabase
-    .from("candidates")
-    .insert({
-      full_name: fullName,
-      email,
-    })
-    .select("id")
-    .single();
-
-  if (candidateError || !candidate) {
+  if (rpcError || !rows?.length) {
     return {
       success: false,
-      error: candidateError?.message ?? "Failed to create candidate",
+      error: rpcError?.message ?? "Failed to create application",
     };
   }
 
-  const { data: application, error: applicationError } = await supabase
-    .from("candidate_applications")
-    .insert({
-      candidate_id: candidate.id,
-      job_id: typedJob.id,
-      drive_file_id: driveFileId,
-      drive_file_url: driveFileUrl,
-      status: "APPLIED",
-    })
-    .select("id")
-    .single();
+  const row = rows[0] as { application_id: string; job_title: string };
+  const applicationId = row.application_id;
+  const jobTitle = row.job_title;
 
-  if (applicationError || !application) {
-    return {
-      success: false,
-      error: applicationError?.message ?? "Failed to create application",
-    };
-  }
-
-  const { data: cvFile, error: cvError } = await supabase
-    .from("cv_files")
-    .insert({
-      candidate_application_id: application.id,
-      file_name: file.name,
-      mime_type: file.type || null,
-      file_size: file.size,
-      drive_file_id: driveFileId,
-      drive_folder_id: typedJob.incoming_folder_id,
-      storage_status: "UPLOADED",
-    })
-    .select("id")
-    .single();
-
-  if (cvError || !cvFile) {
-    return {
-      success: false,
-      error: cvError?.message ?? "Failed to record CV file",
-    };
-  }
-
-  await supabase
-    .from("candidate_applications")
-    .update({ cv_file_id: cvFile.id })
-    .eq("id", application.id);
-
-  await supabase.from("ai_processing_jobs").insert({
-    candidate_application_id: application.id,
-    job_type: "CV_SCREENING",
-    status: "QUEUED",
+  after(async () => {
+    const admin = createAdminClient();
+    try {
+      await uploadCvToStaging(
+        stagingPath,
+        file.buffer,
+        file.type || "application/pdf"
+      );
+      await enqueueApplicationProcessing(applicationId);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "CV staging upload failed";
+      console.error(`[apply] staging failed ${applicationId}:`, message);
+      await markUploadFailed(admin, applicationId, message);
+    }
   });
-
-  scheduleApplicationProcessing(application.id);
 
   return {
     success: true,
-    applicationId: application.id,
-    jobTitle: typedJob.title,
+    applicationId,
+    jobTitle,
   };
 }

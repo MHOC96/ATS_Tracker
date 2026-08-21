@@ -35,7 +35,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         count: "exact",
       })
       .eq("job_id", id)
-      .order("applied_at", { ascending: false }),
+      .order("applied_at", { ascending: false })
+      .limit(25),
   ]);
 
   if (error || !job) notFound();
@@ -63,26 +64,29 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="break-words font-mono text-xl tracking-tight sm:text-2xl">{job.title}</h1>
-          <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
+          <h1 className="break-words text-[24px] font-[510] tracking-[-0.012em] text-paper sm:text-[32px]">{job.title}</h1>
+          <p className="mt-2 break-all linear-mono text-[12px] text-fog">
             {job.slug} · {job.job_type.replace(/_/g, " ")}
           </p>
         </div>
         <Badge variant="outline">{job.status}</Badge>
       </div>
 
-      {canPublish && <PublishJobButton jobId={job.id} />}
-
-      {canEdit && (
-        <Link
-          href={`/admin/jobs/${job.id}/edit`}
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "inline-flex w-full sm:w-auto"
+      {(canPublish || canEdit) && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {canPublish && <PublishJobButton jobId={job.id} />}
+          {canEdit && (
+            <Link
+              href={`/admin/jobs/${job.id}/edit`}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "inline-flex w-full justify-center sm:w-auto"
+              )}
+            >
+              Edit job
+            </Link>
           )}
-        >
-          Edit job
-        </Link>
+        </div>
       )}
 
       {showPublicPreview && (
@@ -101,7 +105,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           >
             View public page
           </Link>
-          <p className="break-all text-xs text-muted-foreground">
+          <p className="break-all text-[12px] text-fog">
             Candidates apply at /jobs/{job.slug}
           </p>
         </div>
@@ -109,25 +113,25 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-mono text-lg font-normal">Job description</CardTitle>
+          <CardTitle>Job description</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
+        <CardContent className="space-y-4 text-[14px] text-fog">
           {job.description && <p>{job.description}</p>}
           {job.responsibilities && (
             <div>
-              <p className="font-medium text-foreground">Responsibilities</p>
+              <p className="font-[510] text-paper">Responsibilities</p>
               <p>{job.responsibilities}</p>
             </div>
           )}
           {job.requirements && (
             <div>
-              <p className="font-medium text-foreground">Requirements</p>
+              <p className="font-[510] text-paper">Requirements</p>
               <p>{job.requirements}</p>
             </div>
           )}
           {job.required_skills?.length > 0 && (
             <p>
-              <span className="font-medium text-foreground">Required: </span>
+              <span className="font-[510] text-paper">Required: </span>
               {job.required_skills.join(", ")}
             </p>
           )}
@@ -138,13 +142,27 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-mono text-lg font-normal">Applications</CardTitle>
+          <CardTitle>
+            Applications
+            {applicationCount !== null && applicationCount > 0
+              ? ` (${applicationCount})`
+              : ""}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {!applications?.length ? (
-            <p className="text-sm text-muted-foreground">No applications yet.</p>
+            <p className="text-[13px] text-fog">No applications yet.</p>
           ) : (
-            <ul className="divide-y divide-border">
+            <>
+              {applicationCount !== null && applicationCount > applications.length && (
+                <p className="mb-3 text-[12px] text-fog">
+                  Showing latest {applications.length} of {applicationCount}.{" "}
+                  <Link href="/admin/candidates" className="underline">
+                    View all candidates
+                  </Link>
+                </p>
+              )}
+            <ul className="divide-y divide-graphite">
               {applications.map((application) => {
                 const candidate = application.candidates as unknown as {
                   full_name: string | null;
@@ -159,11 +177,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                     <div className="min-w-0">
                       <Link
                         href={`/admin/candidates/${application.id}`}
-                        className="break-words font-medium hover:underline"
+                        className="break-words font-[510] text-paper hover:underline"
                       >
                         {candidate?.full_name ?? "Unknown candidate"}
                       </Link>
-                      <p className="break-all text-muted-foreground">
+                      <p className="break-all text-fog">
                         {candidate?.email ?? "No email"}
                       </p>
                     </div>
@@ -174,6 +192,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 );
               })}
             </ul>
+            </>
           )}
         </CardContent>
       </Card>

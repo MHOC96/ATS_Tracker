@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createApplicationWithCv } from "@/lib/applications/process-application";
 import { requireSessionUser } from "@/lib/auth/session";
-import { createClient } from "@/lib/supabase/server";
-import { validateCvFile } from "@/lib/validation/apply-form";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { validateCvFile, validatePdfBuffer } from "@/lib/validation/apply-form";
 
 type UploadResult =
   | { success: true; applicationId: string }
@@ -32,13 +32,18 @@ export async function uploadCvForJob(
       return { success: false, error: fileError };
     }
 
-    const supabase = await createClient();
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const pdfError = validatePdfBuffer(buffer);
+    if (pdfError) {
+      return { success: false, error: pdfError };
+    }
+
     const candidateName =
       (formData.get("fullName") as string | null)?.trim() || null;
     const candidateEmail =
       (formData.get("email") as string | null)?.trim() || null;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const supabase = createAdminClient();
     const result = await createApplicationWithCv(
       supabase,
       jobId,
@@ -46,7 +51,7 @@ export async function uploadCvForJob(
       candidateEmail,
       {
         name: file.name,
-        type: file.type || "application/octet-stream",
+        type: "application/pdf",
         size: file.size,
         buffer,
       }

@@ -10,12 +10,12 @@ export default async function AdminLayout({
   const user = await requireSessionUser();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-void">
       <AdminSidebar userRole={user.role} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader user={user} />
         <main className="flex-1 overflow-auto">
-          <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8 lg:px-8">{children}</div>
+          <div className="linear-page px-4 py-6 sm:px-6 sm:py-8 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

@@ -14,20 +14,18 @@ export const getSessionUser = cache(async (): Promise<AppUser | null> => {
 
   const {
     data: { user },
-    error: authError,
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) return null;
+  if (userError || !user) return null;
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile } = await supabase
     .from("users")
     .select("id, email, full_name, role")
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile) {
-    return null;
-  }
+  if (!profile) return null;
 
   return {
     id: profile.id,
@@ -46,11 +44,5 @@ export async function requireSessionUser(): Promise<AppUser> {
 export async function requireAdminUser(): Promise<AppUser> {
   const user = await requireSessionUser();
   if (user.role !== "ADMIN") redirect("/admin");
-  return user;
-}
-
-export async function requireRecruiterOrAdmin(): Promise<AppUser> {
-  const user = await requireSessionUser();
-  if (user.role === "REVIEWER") redirect("/admin");
   return user;
 }
