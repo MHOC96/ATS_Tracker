@@ -3,6 +3,7 @@ import {
   jdGenerationInputSchema,
   jdGenerationOutputSchema,
 } from "@/packages/shared/schemas/jd";
+import { resolveReasoningModel } from "@/lib/ai/models";
 
 const JD_SYSTEM_PROMPT = `You are a professional recruitment copywriter. Generate a job description for the provided role.
 
@@ -31,7 +32,7 @@ export async function generateJobDescriptionWithAi(
   input: z.infer<typeof jdGenerationInputSchema>
 ): Promise<z.infer<typeof jdGenerationOutputSchema>> {
   const parsed = jdGenerationInputSchema.parse(input);
-  const model = process.env.REASONING_MODEL ?? "llama-3.3-70b-versatile";
+  const model = resolveReasoningModel(process.env.REASONING_MODEL);
 
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
