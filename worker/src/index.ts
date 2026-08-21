@@ -28,7 +28,10 @@ const processPayloadSchema = z.object({
 
 function isAuthorized(req: import("http").IncomingMessage): boolean {
   if (!WORKER_SECRET) {
-    return process.env.ALLOW_INSECURE_WORKER === "true";
+    return (
+      process.env.NODE_ENV !== "production" ||
+      process.env.ALLOW_INSECURE_WORKER === "true"
+    );
   }
   const auth = req.headers.authorization;
   return auth === `Bearer ${WORKER_SECRET}`;

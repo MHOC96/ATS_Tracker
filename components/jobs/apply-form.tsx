@@ -24,17 +24,24 @@ export function ApplyForm({ jobSlug, jobTitle }: ApplyFormProps) {
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
-    const result = await applyToJobBySlug(jobSlug, formData);
+    try {
+      const formData = new FormData(event.currentTarget);
+      const result = await applyToJobBySlug(jobSlug, formData);
 
-    if (!result.success) {
-      setError(result.error);
+      if (!result.success) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+
+      setSubmitted(true);
       setLoading(false);
-      return;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
+      setLoading(false);
     }
-
-    setSubmitted(true);
-    setLoading(false);
   }
 
   if (submitted) {

@@ -1,12 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { after } from "next/server";
 import { randomUUID } from "crypto";
 import {
   buildCvStagingPath,
   uploadCvToStaging,
 } from "@/lib/storage/cv-staging";
 import { enqueueApplicationProcessing } from "@/lib/queue/enqueue";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ApplicationJobRow = {
   id: string;
@@ -109,22 +107,25 @@ export async function createApplicationWithCv(
   const applicationId = row.application_id;
   const jobTitle = row.job_title;
 
-  after(async () => {
-    const admin = createAdminClient();
-    try {
-      await uploadCvToStaging(
-        stagingPath,
-        file.buffer,
-        file.type || "application/pdf"
+  try {
+    await uploadCvToStaging(
+      stagingPath,
+      file.buffer,
+      file.type || "application/pdf"
+    );
+    await enqueueApplicationProcessing(applicationId);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        `[apply] staged CV and queued screening for application ${applicationId}`
       );
-      await enqueueApplicationProcessing(applicationId);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "CV staging upload failed";
-      console.error(`[apply] staging failed ${applicationId}:`, message);
-      await markUploadFailed(admin, applicationId, message);
     }
-  });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "CV staging upload failed";
+    console.error(`[apply] pipeline start failed ${applicationId}:`, message);
+    await markUploadFailed(supabase, applicationId, message);
+    return { success: false, error: message };
+  }
 
   return {
     success: true,

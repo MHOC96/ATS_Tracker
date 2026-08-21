@@ -11,6 +11,8 @@ type RedisConnectionOptions = {
   port: number;
   password?: string;
   maxRetriesPerRequest: null;
+  connectTimeout: number;
+  retryStrategy: (times: number) => number | null;
 };
 
 let queue: Queue<CvScreeningJobData> | null = null;
@@ -27,6 +29,11 @@ function parseRedisConnection(url: string): RedisConnectionOptions {
     port: Number(parsed.port || 6379),
     password: parsed.password || undefined,
     maxRetriesPerRequest: null,
+    connectTimeout: 5000,
+    retryStrategy(times: number) {
+      if (times > 2) return null;
+      return Math.min(times * 400, 1200);
+    },
   };
 }
 
