@@ -1,58 +1,58 @@
-import { SchemaType, type Schema } from "@google/generative-ai";
+import { Type, type Schema } from "@google/genai";
 
 /** JSON schema for Gemini structured output (screening fields only). */
 export const CANDIDATE_EXTRACTION_RESPONSE_SCHEMA: Schema = {
-  type: SchemaType.OBJECT,
+  type: Type.OBJECT,
   properties: {
-    fullName: { type: SchemaType.STRING, nullable: true },
-    email: { type: SchemaType.STRING, nullable: true },
-    phone: { type: SchemaType.STRING, nullable: true },
-    location: { type: SchemaType.STRING, nullable: true },
-    university: { type: SchemaType.STRING, nullable: true },
-    degree: { type: SchemaType.STRING, nullable: true },
-    gpa: { type: SchemaType.NUMBER, nullable: true },
-    yearsExperience: { type: SchemaType.NUMBER, nullable: true },
+    fullName: { type: Type.STRING, nullable: true },
+    email: { type: Type.STRING, nullable: true },
+    phone: { type: Type.STRING, nullable: true },
+    location: { type: Type.STRING, nullable: true },
+    university: { type: Type.STRING, nullable: true },
+    degree: { type: Type.STRING, nullable: true },
+    gpa: { type: Type.NUMBER, nullable: true },
+    yearsExperience: { type: Type.NUMBER, nullable: true },
     skills: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
     },
     education: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          institution: { type: SchemaType.STRING, nullable: true },
-          degree: { type: SchemaType.STRING, nullable: true },
-          year: { type: SchemaType.STRING, nullable: true },
+          institution: { type: Type.STRING, nullable: true },
+          degree: { type: Type.STRING, nullable: true },
+          year: { type: Type.STRING, nullable: true },
         },
       },
     },
     experience: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          company: { type: SchemaType.STRING, nullable: true },
-          title: { type: SchemaType.STRING, nullable: true },
-          duration: { type: SchemaType.STRING, nullable: true },
+          company: { type: Type.STRING, nullable: true },
+          title: { type: Type.STRING, nullable: true },
+          duration: { type: Type.STRING, nullable: true },
         },
       },
     },
     certifications: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
     },
     projects: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          name: { type: SchemaType.STRING, nullable: true },
-          description: { type: SchemaType.STRING, nullable: true },
+          name: { type: Type.STRING, nullable: true },
+          description: { type: Type.STRING, nullable: true },
         },
       },
     },
-    extractionConfidence: { type: SchemaType.NUMBER, nullable: true },
+    extractionConfidence: { type: Type.NUMBER, nullable: true },
   },
   required: ["skills", "education", "experience", "certifications", "projects"],
 };

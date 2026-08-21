@@ -24,6 +24,34 @@ export type CreateApplicationResult =
   | { success: true; applicationId: string; jobTitle: string }
   | { success: false; error: string };
 
+function formatPipelineError(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as Error).name === "AggregateError"
+  ) {
+    return "Cannot connect to Redis — check REDIS_URL (use redis://..., not redis:redis://...) or unset REDIS_URL for local HTTP worker";
+  }
+  if (error instanceof Error) {
+    if (error.message.trim()) return error.message;
+    if (error.name && error.name !== "Error") return error.name;
+    if (error.cause instanceof Error && error.cause.message.trim()) {
+      return error.cause.message;
+    }
+  }
+  if (typeof error === "string" && error.trim()) return error;
+  try {
+    const serialized = JSON.stringify(error);
+    if (serialized && serialized !== "{}" && serialized !== "null") {
+      return serialized;
+    }
+  } catch {
+    // ignore
+  }
+  return "Pipeline start failed (check REDIS_URL, cv-staging bucket, migrations)";
+}
+
 async function markUploadFailed(
   supabase: SupabaseClient,
   applicationId: string,
@@ -108,11 +136,13 @@ export async function createApplicationWithCv(
   const jobTitle = row.job_title;
 
   try {
+    console.log(`[apply] staging CV for application ${applicationId}`);
     await uploadCvToStaging(
       stagingPath,
       file.buffer,
       file.type || "application/pdf"
     );
+    console.log(`[apply] enqueue screening for application ${applicationId}`);
     await enqueueApplicationProcessing(applicationId);
     if (process.env.NODE_ENV !== "production") {
       console.log(
@@ -120,9 +150,11 @@ export async function createApplicationWithCv(
       );
     }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "CV staging upload failed";
-    console.error(`[apply] pipeline start failed ${applicationId}:`, message);
+    const message = formatPipelineError(error);
+    console.error(
+      `[apply] pipeline start failed ${applicationId}: ${message}`,
+      error instanceof Error && error.stack ? `\n${error.stack}` : ""
+    );
     await markUploadFailed(supabase, applicationId, message);
     return { success: false, error: message };
   }

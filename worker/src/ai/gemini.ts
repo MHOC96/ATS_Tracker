@@ -1,4 +1,9 @@
-import type { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  type GoogleGenAI,
+  type Part,
+  createPartFromBase64,
+  createPartFromText,
+} from "@google/genai";
 import { workerConfig } from "../config.js";
 import {
   candidateExtractionSchema,
@@ -49,19 +54,16 @@ function buildGenerationConfig() {
   };
 }
 
-async function runGeminiJson(
-  client: GoogleGenerativeAI,
-  parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>
-) {
-  const model = client.getGenerativeModel({
+async function runGeminiJson(client: GoogleGenAI, parts: Part[]) {
+  const response = await client.models.generateContent({
     model: workerConfig.visionModel,
-    generationConfig: buildGenerationConfig(),
+    contents: [{ role: "user", parts }],
+    config: buildGenerationConfig(),
   });
 
-  const result = await model.generateContent(parts);
-  const text = result.response.text();
+  const text = response.text ?? "";
   const raw = parseJsonResponse(text);
-  const usageMetadata = result.response.usageMetadata as
+  const usageMetadata = response.usageMetadata as
     | Record<string, unknown>
     | undefined;
 
@@ -80,7 +82,7 @@ CV TEXT:
 ${cvText}`;
 
   const { raw, usageMetadata } = await withGeminiKeyRotation((client) =>
-    runGeminiJson(client, [{ text: prompt }])
+    runGeminiJson(client, [createPartFromText(prompt)])
   );
 
   const parsed = candidateExtractionSchema.parse(raw);
@@ -106,13 +108,8 @@ Extract from the attached CV document.${hintsBlock(options.hints)}`;
 
   const { raw, usageMetadata } = await withGeminiKeyRotation((client) =>
     runGeminiJson(client, [
-      { text: prompt },
-      {
-        inlineData: {
-          mimeType,
-          data: buffer.toString("base64"),
-        },
-      },
+      createPartFromText(prompt),
+      createPartFromBase64(buffer.toString("base64"), mimeType),
     ])
   );
 
@@ -142,7 +139,7 @@ PREVIOUS JSON:
 ${JSON.stringify(previousJson)}`;
 
   const { raw, usageMetadata } = await withGeminiKeyRotation((client) =>
-    runGeminiJson(client, [{ text: prompt }])
+    runGeminiJson(client, [createPartFromText(prompt)])
   );
 
   const parsed = candidateExtractionSchema.parse(raw);

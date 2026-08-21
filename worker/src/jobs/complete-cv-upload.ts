@@ -4,6 +4,7 @@ import {
   deleteCvFromStaging,
   downloadCvFromStaging,
 } from "../storage/cv-staging.js";
+import { pipelineStep } from "../pipeline-log.js";
 
 type PendingCvRow = {
   id: string;
@@ -30,6 +31,7 @@ export async function completeCvUploadToDrive(
   }
 
   if (application.drive_file_id) {
+    pipelineStep(applicationId, "drive-upload", "already on Drive — skip");
     return null;
   }
 
@@ -55,6 +57,12 @@ export async function completeCvUploadToDrive(
     throw new Error("CV staging path or drive folder is missing");
   }
 
+  pipelineStep(
+    applicationId,
+    "drive-upload",
+    `download staging → ${typedCv.file_name}`
+  );
+
   const buffer = await downloadCvFromStaging(typedCv.storage_path);
   const mimeType = typedCv.mime_type || "application/pdf";
 
@@ -64,6 +72,8 @@ export async function completeCvUploadToDrive(
     mimeType,
     buffer
   );
+
+  pipelineStep(applicationId, "drive-upload", `uploaded fileId=${driveFileId}`);
 
   await supabase
     .from("candidate_applications")
