@@ -8,7 +8,8 @@ import "./load-env.js";
 import { createServer } from "http";
 import { z } from "zod";
 import { workerConfig } from "./config.js";
-import { getGeminiKeyFormat } from "./ai/gemini-keys.js";
+import { getGeminiApiKeyCount, getGeminiKeyFormat } from "./ai/gemini-keys.js";
+import { DEFAULT_VISION_MODEL } from "./models.js";
 import { withWorkerConcurrency } from "./concurrency.js";
 import { completeCvUploadToDrive } from "./jobs/complete-cv-upload.js";
 import { runRecruitmentWorkflow } from "./graph/workflow.js";
@@ -145,5 +146,18 @@ server.listen(PORT, () => {
   console.log(
     `[worker] vision=${workerConfig.visionModel} reasoning=${workerConfig.reasoningModel} geminiKeys=${workerConfig.geminiApiKeyCount} geminiKeyFormat=${getGeminiKeyFormat()}`
   );
+  if (workerConfig.visionModel !== DEFAULT_VISION_MODEL) {
+    console.warn(
+      `[worker] VISION_MODEL=${workerConfig.visionModel} — ensure this model exists in the Gemini API`
+    );
+  }
+  if (getGeminiKeyFormat() === "auth") {
+    console.warn(
+      "[worker] Gemini keys look like auth tokens (AQ.*). Use a Google AI Studio API key (AIza…) in GEMINI_API_KEY if extraction fails."
+    );
+  }
+  if (getGeminiApiKeyCount() === 0) {
+    console.error("[worker] No Gemini API keys configured — CV extraction will fail");
+  }
   console.log("[worker] LangGraph workflow ready (Gemini + Groq)");
 });

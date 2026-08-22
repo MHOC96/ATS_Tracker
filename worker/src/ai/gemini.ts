@@ -5,8 +5,9 @@ import {
   createPartFromText,
 } from "@google/genai";
 import { workerConfig } from "../config.js";
+import { usesLegacyGeminiSamplingParams } from "../models.js";
 import {
-  candidateExtractionSchema,
+  parseCandidateExtraction,
   type CandidateExtraction,
 } from "../schemas.js";
 import {
@@ -46,19 +47,29 @@ function hintsBlock(hints?: ApplyFormHints | null): string {
   return `\nApply-form hints (use only if missing on CV): ${JSON.stringify(hints)}`;
 }
 
-function buildGenerationConfig() {
-  return {
+function buildGenerationConfig(model: string) {
+  const config: {
+    responseMimeType: string;
+    responseSchema: typeof CANDIDATE_EXTRACTION_RESPONSE_SCHEMA;
+    temperature?: number;
+  } = {
     responseMimeType: "application/json",
     responseSchema: CANDIDATE_EXTRACTION_RESPONSE_SCHEMA,
-    temperature: 0.1,
   };
+
+  if (usesLegacyGeminiSamplingParams(model)) {
+    config.temperature = 0.1;
+  }
+
+  return config;
 }
 
 async function runGeminiJson(client: GoogleGenAI, parts: Part[]) {
+  const model = workerConfig.visionModel;
   const response = await client.models.generateContent({
-    model: workerConfig.visionModel,
+    model,
     contents: [{ role: "user", parts }],
-    config: buildGenerationConfig(),
+    config: buildGenerationConfig(model),
   });
 
   const text = response.text ?? "";
@@ -85,7 +96,7 @@ ${cvText}`;
     runGeminiJson(client, [createPartFromText(prompt)])
   );
 
-  const parsed = candidateExtractionSchema.parse(raw);
+  const parsed = parseCandidateExtraction(raw);
   const data = mergeApplyFormHints(parsed, options.hints);
 
   return {
@@ -113,7 +124,7 @@ Extract from the attached CV document.${hintsBlock(options.hints)}`;
     ])
   );
 
-  const parsed = candidateExtractionSchema.parse(raw);
+  const parsed = parseCandidateExtraction(raw);
   const data = mergeApplyFormHints(parsed, options.hints);
 
   return {
@@ -142,7 +153,7 @@ ${JSON.stringify(previousJson)}`;
     runGeminiJson(client, [createPartFromText(prompt)])
   );
 
-  const parsed = candidateExtractionSchema.parse(raw);
+  const parsed = parseCandidateExtraction(raw);
   const data = mergeApplyFormHints(parsed, options.hints);
 
   return {
