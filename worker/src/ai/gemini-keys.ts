@@ -46,6 +46,10 @@ export function getCurrentGeminiKeyIndex(): number {
   return currentIndex;
 }
 
+export function resetGeminiApiKeyIndex(): void {
+  currentIndex = 0;
+}
+
 export function rotateGeminiApiKey(reason?: string): boolean {
   if (apiKeys.length <= 1) return false;
   currentIndex = (currentIndex + 1) % apiKeys.length;
@@ -63,10 +67,30 @@ function errorMessage(error: unknown): string {
   return String(error ?? "");
 }
 
+function collectErrorText(error: unknown): string {
+  const parts: string[] = [errorMessage(error)];
+
+  if (typeof error === "object" && error !== null) {
+    const status = (error as { status?: number | string }).status;
+    if (status !== undefined) parts.push(String(status));
+
+    const cause = (error as { cause?: unknown }).cause;
+    if (cause) parts.push(errorMessage(cause));
+
+    try {
+      parts.push(JSON.stringify(error));
+    } catch {
+      // ignore
+    }
+  }
+
+  return parts.join(" ").toLowerCase();
+}
+
 export function isGeminiRateLimitError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
 
-  const lower = errorMessage(error).toLowerCase();
+  const lower = collectErrorText(error);
   return (
     lower.includes("429") ||
     lower.includes("quota") ||
@@ -78,7 +102,7 @@ export function isGeminiRateLimitError(error: unknown): boolean {
 
 /** Invalid/expired key, OAuth token passed as API key, etc. */
 export function isGeminiAuthError(error: unknown): boolean {
-  const lower = errorMessage(error).toLowerCase();
+  const lower = collectErrorText(error);
   return (
     lower.includes("401") ||
     lower.includes("403") ||
@@ -101,31 +125,38 @@ export async function withGeminiKeyRotation<T>(
   }
 
   let lastError: unknown;
-  const maxAttempts = apiKeys.length;
+  const startIndex = currentIndex;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+  for (let attempt = 0; attempt < apiKeys.length; attempt++) {
+    const keyIndex = (startIndex + attempt) % apiKeys.length;
+    currentIndex = keyIndex;
+
     const { GoogleGenAI } = await import("@google/genai");
-    const client = new GoogleGenAI({ apiKey: getCurrentGeminiApiKey() });
+    const client = new GoogleGenAI({ apiKey: apiKeys[keyIndex] });
 
     try {
       return await operation(client);
     } catch (error) {
       lastError = error;
-      const failedIndex = getCurrentGeminiKeyIndex() + 1;
+      const isLastKey = attempt === apiKeys.length - 1;
+      const keyLabel = `${keyIndex + 1}/${apiKeys.length}`;
+
       if (isGeminiAuthError(error)) {
         console.warn(
-          `[gemini] auth failure on key ${failedIndex}/${apiKeys.length}: ${errorMessage(error).slice(0, 200)}`
+          `[gemini] auth failure on key ${keyLabel}: ${errorMessage(error).slice(0, 200)}`
         );
-        if (rotateGeminiApiKey("auth")) continue;
+        if (!isLastKey) continue;
+        resetGeminiApiKeyIndex();
+      } else if (isGeminiRateLimitError(error)) {
+        console.warn(`[gemini] rate limit on key ${keyLabel}`);
+        if (!isLastKey) continue;
+      } else {
+        throw error;
       }
-      if (isGeminiRateLimitError(error) && rotateGeminiApiKey("rate limit")) {
-        continue;
-      }
-      throw error;
     }
   }
 
   throw lastError instanceof Error
     ? lastError
-    : new Error("Gemini request failed after rotating all API keys");
+    : new Error("Gemini request failed after trying all API keys");
 }

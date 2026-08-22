@@ -8,7 +8,7 @@ import "./load-env.js";
 import { createServer } from "http";
 import { z } from "zod";
 import { workerConfig } from "./config.js";
-import { getGeminiApiKeyCount, getGeminiKeyFormat } from "./ai/gemini-keys.js";
+import { getGeminiApiKeyCount, getGeminiKeyFormat, resetGeminiApiKeyIndex } from "./ai/gemini-keys.js";
 import { DEFAULT_VISION_MODEL } from "./models.js";
 import { withWorkerConcurrency } from "./concurrency.js";
 import { completeCvUploadToDrive } from "./jobs/complete-cv-upload.js";
@@ -140,6 +140,7 @@ const server = createServer(async (req, res) => {
 });
 
 startCvScreeningWorker();
+resetGeminiApiKeyIndex();
 
 server.listen(PORT, () => {
   console.log(`[worker] ATS AI worker listening on port ${PORT}`);
