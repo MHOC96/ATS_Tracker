@@ -116,6 +116,83 @@ export async function getPublishedJobForApply(slug: string) {
   )();
 }
 
+export type AdminJobListItem = {
+  id: string;
+  title: string;
+  slug: string;
+  jobType: string;
+  status: string;
+  publishedAt: string | null;
+  createdAt: string;
+  applicationCount: number;
+};
+
+export type AdminJobsListResult = {
+  jobs: AdminJobListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+const DEFAULT_JOBS_PAGE_SIZE = 20;
+
+export async function listAdminJobs(options?: {
+  page?: number;
+  pageSize?: number;
+}): Promise<AdminJobsListResult> {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  const pageSize = options?.pageSize ?? DEFAULT_JOBS_PAGE_SIZE;
+  const page = Math.max(1, options?.page ?? 1);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data: jobs, error, count } = await supabase
+    .from("jobs")
+    .select(
+      "id, title, slug, job_type, status, published_at, created_at",
+      { count: "exact" }
+    )
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error || !jobs) {
+    return { jobs: [], total: 0, page, pageSize };
+  }
+
+  const jobIds = jobs.map((job) => job.id);
+  const countByJob = new Map<string, number>();
+
+  if (jobIds.length > 0) {
+    const { data: countRows } = await supabase.rpc("get_job_application_counts", {
+      p_job_ids: jobIds,
+    });
+
+    for (const row of countRows ?? []) {
+      countByJob.set(
+        row.job_id as string,
+        Number(row.application_count ?? 0)
+      );
+    }
+  }
+
+  return {
+    jobs: jobs.map((job) => ({
+      id: job.id,
+      title: job.title,
+      slug: job.slug,
+      jobType: job.job_type,
+      status: job.status,
+      publishedAt: job.published_at,
+      createdAt: job.created_at,
+      applicationCount: countByJob.get(job.id) ?? 0,
+    })),
+    total: count ?? 0,
+    page,
+    pageSize,
+  };
+}
+
 export type JobEditData = {
   id: string;
   title: string;
@@ -145,23 +222,31 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
 
-  const { data: job, error } = await supabase
-    .from("jobs")
-    .select(
+  const [jobResult, modelResult] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select(
+        `
+        id,
+        title,
+        slug,
+        status,
+        job_type,
+        hiring_period_start,
+        hiring_period_end,
+        description,
+        responsibilities,
+        requirements,
+        required_skills,
+        preferred_skills
       `
-      id,
-      title,
-      slug,
-      status,
-      job_type,
-      hiring_period_start,
-      hiring_period_end,
-      description,
-      responsibilities,
-      requirements,
-      required_skills,
-      preferred_skills,
-      scoring_models(
+      )
+      .eq("id", jobId)
+      .single(),
+    supabase
+      .from("scoring_models")
+      .select(
+        `
         id,
         name,
         description,
@@ -174,33 +259,19 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
           minimum_value,
           is_mandatory
         )
+      `
       )
-    `
-    )
-    .eq("id", jobId)
-    .single();
+      .eq("job_id", jobId)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
-  if (error || !job) return null;
+  const job = jobResult.data;
+  const scoringModel = modelResult.data;
 
-  const models = job.scoring_models as unknown as Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    version: number;
-    scoring_criteria: Array<{
-      name: string;
-      description: string | null;
-      weight: number;
-      criteria_type: "WEIGHT" | "MINIMUM" | "MANDATORY";
-      minimum_value: number | null;
-      is_mandatory: boolean;
-    }>;
-  }>;
-
-  const scoringModel =
-    models?.sort((a, b) => b.version - a.version)[0] ?? null;
-
-  if (!scoringModel) return null;
+  if (jobResult.error || !job) return null;
+  if (modelResult.error || !scoringModel) return null;
 
   return {
     id: job.id,
@@ -217,13 +288,24 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
     preferredSkillsText: (job.preferred_skills ?? []).join(", "),
     scoringName: scoringModel.name,
     scoringDescription: scoringModel.description ?? "",
-    criteria: (scoringModel.scoring_criteria ?? []).map((criterion) => ({
+    criteria: (
+      (scoringModel.scoring_criteria as Array<{
+        name: string;
+        description: string | null;
+        weight: number;
+        criteria_type: "WEIGHT" | "MINIMUM" | "MANDATORY";
+        minimum_value: number | null;
+        is_mandatory: boolean;
+      }>) ?? []
+    ).map((criterion) => ({
       name: criterion.name,
       description: criterion.description ?? undefined,
       weight: Number(criterion.weight),
       criteriaType: criterion.criteria_type,
       minimumValue:
-        criterion.minimum_value !== null ? Number(criterion.minimum_value) : undefined,
+        criterion.minimum_value !== null
+          ? Number(criterion.minimum_value)
+          : undefined,
       isMandatory: criterion.is_mandatory,
     })),
   };

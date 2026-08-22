@@ -2,7 +2,7 @@
 const STEP_LABELS: Record<string, string> = {
   loadApplication: "Load application (DB)",
   validateFile: "Validate CV file",
-  extractCv: "Extract CV (Gemini vision)",
+  extractCv: "Extract CV (Gemini)",
   validateExtraction: "Validate extraction (Zod)",
   loadJob: "Load job + requirements",
   loadScoringModel: "Load scoring model",

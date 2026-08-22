@@ -152,8 +152,16 @@ server.listen(PORT, () => {
     );
   }
   if (getGeminiKeyFormat() === "auth") {
+    console.log(
+      "[worker] Gemini auth keys (AQ.*) — current Google AI Studio default"
+    );
+  } else if (getGeminiKeyFormat() === "standard") {
     console.warn(
-      "[worker] Gemini keys look like auth tokens (AQ.*). Use a Google AI Studio API key (AIza…) in GEMINI_API_KEY if extraction fails."
+      "[worker] Legacy AIza traffic keys detected — migrate to AQ auth keys before Sep 2026"
+    );
+  } else if (getGeminiKeyFormat() === "unknown") {
+    console.warn(
+      "[worker] Gemini key format not recognized (expected AQ.* or AIza…)"
     );
   }
   if (getGeminiApiKeyCount() === 0) {

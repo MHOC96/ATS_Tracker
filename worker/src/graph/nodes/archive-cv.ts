@@ -17,11 +17,31 @@ export async function archiveCv(
       };
     }
 
-    await moveDriveFile(
-      state.driveFileId,
+    const fromFolders = [
       state.incomingFolderId,
-      state.archiveFolderId
-    );
+      state.manualReviewFolderId,
+    ].filter(Boolean);
+
+    let moved = false;
+    for (const fromFolderId of fromFolders) {
+      try {
+        await moveDriveFile(
+          state.driveFileId,
+          fromFolderId,
+          state.archiveFolderId
+        );
+        moved = true;
+        break;
+      } catch {
+        // try next parent folder (e.g. CV already in Manual_Review)
+      }
+    }
+
+    if (!moved) {
+      throw new Error(
+        "CV is not in Incoming_CVs or Manual_Review folder — archive skipped"
+      );
+    }
 
     const supabase = createAdminClient();
     const now = new Date().toISOString();

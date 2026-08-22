@@ -24,20 +24,31 @@ type ActionResult<T = undefined> =
   | { success: true; data: T }
   | { success: false; error: string };
 
-async function uniqueSlug(baseSlug: string, supabase: Awaited<ReturnType<typeof createClient>>) {
-  let slug = baseSlug;
+async function uniqueSlug(
+  baseSlug: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
+) {
+  const { data: rows } = await supabase
+    .from("jobs")
+    .select("slug")
+    .like("slug", `${baseSlug}%`);
+
+  const taken = new Set((rows ?? []).map((row) => row.slug));
+  if (!taken.has(baseSlug)) return baseSlug;
+
   let suffix = 1;
-
-  while (true) {
-    const { data } = await supabase
-      .from("jobs")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
-
-    if (!data) return slug;
-    slug = `${baseSlug}_${suffix}`;
+  while (taken.has(`${baseSlug}_${suffix}`)) {
     suffix += 1;
+  }
+  return `${baseSlug}_${suffix}`;
+}
+
+function revalidateAdminJobPaths(jobId: string, slug?: string) {
+  revalidatePath("/admin/jobs");
+  revalidatePath(`/admin/jobs/${jobId}`);
+  if (slug) {
+    revalidateTag("jobs", "max");
+    revalidateTag(`job:${slug}`, "max");
   }
 }
 
@@ -229,10 +240,7 @@ export async function publishJob(
       .eq("job_id", job.id)
       .eq("version", 1);
 
-    revalidatePath("/admin/jobs");
-    revalidatePath(`/admin/jobs/${job.id}`);
-    revalidateTag("jobs", "max");
-    revalidateTag(`job:${job.slug}`, "max");
+    revalidateAdminJobPaths(job.id, job.slug);
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
     return {
@@ -279,106 +287,45 @@ export async function updateJob(
       data.hiringPeriodEnd
     );
 
-    const { error: jobError } = await supabase
-      .from("jobs")
-      .update({
-        title: data.title,
-        job_type: data.jobType,
-        hiring_period_start: hiringPeriod.hiring_period_start,
-        hiring_period_end: hiringPeriod.hiring_period_end,
-        description: data.description ?? null,
-        responsibilities: data.responsibilities ?? null,
-        requirements: data.requirements ?? null,
-        required_skills: parseSkillsText(data.requiredSkillsText),
-        preferred_skills: parseSkillsText(data.preferredSkillsText),
-      })
-      .eq("id", job.id);
+    const jdContent = [data.description, data.responsibilities, data.requirements]
+      .filter(Boolean)
+      .join("\n\n");
 
-    if (jobError) {
-      return { success: false, error: jobError.message };
-    }
-
-    const { data: scoringModel, error: modelFetchError } = await supabase
-      .from("scoring_models")
-      .select("id")
-      .eq("job_id", job.id)
-      .order("version", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (modelFetchError || !scoringModel) {
-      return { success: false, error: "Scoring model not found for this job" };
-    }
-
-    const { error: modelUpdateError } = await supabase
-      .from("scoring_models")
-      .update({
-        name: data.scoringName,
-        description: data.scoringDescription ?? null,
-        total_weight: totalWeight,
-      })
-      .eq("id", scoringModel.id);
-
-    if (modelUpdateError) {
-      return { success: false, error: modelUpdateError.message };
-    }
-
-    const { error: deleteCriteriaError } = await supabase
-      .from("scoring_criteria")
-      .delete()
-      .eq("scoring_model_id", scoringModel.id);
-
-    if (deleteCriteriaError) {
-      return { success: false, error: deleteCriteriaError.message };
-    }
-
-    const criteriaRows = data.criteria.map((criterion) => ({
-      scoring_model_id: scoringModel.id,
+    const criteriaPayload = data.criteria.map((criterion) => ({
       name: criterion.name,
-      description: criterion.description ?? null,
+      description: criterion.description ?? "",
       weight: criterion.weight,
       criteria_type: criterion.criteriaType,
       minimum_value: criterion.minimumValue ?? null,
       is_mandatory: criterion.isMandatory,
     }));
 
-    const { error: criteriaError } = await supabase
-      .from("scoring_criteria")
-      .insert(criteriaRows);
+    const { error: rpcError } = await supabase.rpc("update_job_with_scoring", {
+      p_job_id: job.id,
+      p_title: data.title,
+      p_job_type: data.jobType,
+      p_hiring_period_start: hiringPeriod.hiring_period_start,
+      p_hiring_period_end: hiringPeriod.hiring_period_end,
+      p_description: data.description ?? null,
+      p_responsibilities: data.responsibilities ?? null,
+      p_requirements: data.requirements ?? null,
+      p_required_skills: parseSkillsText(data.requiredSkillsText),
+      p_preferred_skills: parseSkillsText(data.preferredSkillsText),
+      p_scoring_name: data.scoringName,
+      p_scoring_description: data.scoringDescription ?? null,
+      p_total_weight: totalWeight,
+      p_criteria: criteriaPayload,
+      p_jd_content: jdContent.trim() ? jdContent : null,
+      p_ai_generated_jd: data.aiGeneratedJd ?? false,
+      p_user_id: user.id,
+    });
 
-    if (criteriaError) {
-      return { success: false, error: criteriaError.message };
+    if (rpcError) {
+      return { success: false, error: rpcError.message };
     }
 
-    const jdContent = [data.description, data.responsibilities, data.requirements]
-      .filter(Boolean)
-      .join("\n\n");
-
-    if (jdContent.trim()) {
-      const { data: latestVersion } = await supabase
-        .from("job_description_versions")
-        .select("version")
-        .eq("job_id", job.id)
-        .order("version", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      await supabase.from("job_description_versions").insert({
-        job_id: job.id,
-        version: (latestVersion?.version ?? 0) + 1,
-        content: jdContent,
-        generated_by_ai: data.aiGeneratedJd ?? false,
-        created_by: user.id,
-      });
-    }
-
-    revalidatePath("/admin/jobs");
-    revalidatePath(`/admin/jobs/${job.id}`);
+    revalidateAdminJobPaths(job.id, job.slug);
     revalidatePath(`/admin/jobs/${job.id}/edit`);
-    revalidatePath("/jobs");
-    revalidatePath(`/jobs/${job.slug}`);
-    revalidateTag("jobs", "max");
-    revalidateTag(`job:${job.slug}`, "max");
 
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
@@ -427,13 +374,7 @@ export async function closeJob(
       return { success: false, error: updateError.message };
     }
 
-    revalidatePath("/admin/jobs");
-    revalidatePath(`/admin/jobs/${job.id}`);
-    revalidatePath("/jobs");
-    revalidatePath(`/jobs/${job.slug}`);
-    revalidateTag("jobs", "max");
-    revalidateTag(`job:${job.slug}`, "max");
-
+    revalidateAdminJobPaths(job.id, job.slug);
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
     return {
@@ -481,13 +422,7 @@ export async function archiveJob(
       return { success: false, error: updateError.message };
     }
 
-    revalidatePath("/admin/jobs");
-    revalidatePath(`/admin/jobs/${job.id}`);
-    revalidatePath("/jobs");
-    revalidatePath(`/jobs/${job.slug}`);
-    revalidateTag("jobs", "max");
-    revalidateTag(`job:${job.slug}`, "max");
-
+    revalidateAdminJobPaths(job.id, job.slug);
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
     return {
@@ -567,11 +502,7 @@ export async function deleteJob(
       return { success: false, error: deleteError.message };
     }
 
-    revalidatePath("/admin/jobs");
-    revalidatePath(`/admin/jobs/${job.id}`);
-    revalidatePath("/jobs");
-    revalidatePath(`/jobs/${job.slug}`);
-
+    revalidateAdminJobPaths(job.id, job.slug);
     return { success: true, data: { jobId: job.id } };
   } catch (error) {
     return {

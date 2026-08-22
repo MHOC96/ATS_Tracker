@@ -20,9 +20,14 @@ export function getGeminiApiKeyCount(): number {
   return apiKeys.length;
 }
 
-export function getGeminiKeyFormat(): "auth" | "standard" | "unknown" | "none" {
+export function getGeminiKeyFormat():
+  | "auth"
+  | "standard"
+  | "unknown"
+  | "none" {
   if (apiKeys.length === 0) return "none";
   const key = apiKeys[0];
+  // Google AI Studio auth keys (new default, AQ.*). Legacy traffic keys use AIza.*
   if (key.startsWith("AQ.")) return "auth";
   if (key.startsWith("AIza")) return "standard";
   return "unknown";
@@ -37,30 +42,52 @@ export function getCurrentGeminiApiKey(): string {
   return apiKeys[currentIndex];
 }
 
-export function rotateGeminiApiKey(): boolean {
+export function getCurrentGeminiKeyIndex(): number {
+  return currentIndex;
+}
+
+export function rotateGeminiApiKey(reason?: string): boolean {
   if (apiKeys.length <= 1) return false;
   currentIndex = (currentIndex + 1) % apiKeys.length;
   console.warn(
-    `[gemini] rotated to API key index ${currentIndex + 1}/${apiKeys.length}`
+    `[gemini] rotated to API key index ${currentIndex + 1}/${apiKeys.length}${reason ? ` (${reason})` : ""}`
   );
   return true;
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String((error as { message?: string }).message ?? error);
+  }
+  return String(error ?? "");
 }
 
 export function isGeminiRateLimitError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
 
-  const message =
-    error instanceof Error
-      ? error.message
-      : String((error as { message?: string }).message ?? error);
-
-  const lower = message.toLowerCase();
+  const lower = errorMessage(error).toLowerCase();
   return (
     lower.includes("429") ||
     lower.includes("quota") ||
     lower.includes("rate limit") ||
     lower.includes("resource exhausted") ||
     lower.includes("too many requests")
+  );
+}
+
+/** Invalid/expired key, OAuth token passed as API key, etc. */
+export function isGeminiAuthError(error: unknown): boolean {
+  const lower = errorMessage(error).toLowerCase();
+  return (
+    lower.includes("401") ||
+    lower.includes("403") ||
+    lower.includes("unauthenticated") ||
+    lower.includes("invalid authentication") ||
+    lower.includes("access_token_type_unsupported") ||
+    lower.includes("api key not valid") ||
+    lower.includes("api_key_invalid") ||
+    lower.includes("permission denied")
   );
 }
 
@@ -84,7 +111,14 @@ export async function withGeminiKeyRotation<T>(
       return await operation(client);
     } catch (error) {
       lastError = error;
-      if (isGeminiRateLimitError(error) && rotateGeminiApiKey()) {
+      const failedIndex = getCurrentGeminiKeyIndex() + 1;
+      if (isGeminiAuthError(error)) {
+        console.warn(
+          `[gemini] auth failure on key ${failedIndex}/${apiKeys.length}: ${errorMessage(error).slice(0, 200)}`
+        );
+        if (rotateGeminiApiKey("auth")) continue;
+      }
+      if (isGeminiRateLimitError(error) && rotateGeminiApiKey("rate limit")) {
         continue;
       }
       throw error;
