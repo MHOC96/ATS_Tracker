@@ -65,6 +65,9 @@ export async function extractCv(
     const message =
       error instanceof Error ? error.message : "Gemini extraction failed";
     console.error("[graph] extractCv failed", state.applicationId, message);
+    if (error instanceof Error && error.stack) {
+      console.error(error.stack);
+    }
 
     return {
       status: "MANUAL_REVIEW",

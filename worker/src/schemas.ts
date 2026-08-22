@@ -36,9 +36,13 @@ export function normalizeProfileLinks(links: ProfileLink[]): ProfileLink[] {
 
 export const candidateExtractionSchema = z.object({
   fullName: z.string().nullable(),
-  email: z
-    .union([z.string().email(), z.literal(""), z.null()])
-    .transform((value) => (value === "" ? null : value)),
+  email: z.preprocess((value) => {
+    if (value === "" || value === null || value === undefined) return null;
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return z.string().email().safeParse(trimmed).success ? trimmed : null;
+  }, z.string().email().nullable()),
   phone: z.string().nullable(),
   location: z.string().nullable(),
   university: z.string().nullable(),
@@ -58,11 +62,27 @@ export const candidateExtractionSchema = z.object({
     ),
   projects: z.array(z.record(z.string(), z.unknown())).default([]),
   profileLinks: z
-    .array(profileLinkSchema)
+    .array(
+      z.object({
+        label: z.string().optional(),
+        url: z.string().optional(),
+      })
+    )
     .default([])
-    .transform(normalizeProfileLinks),
+    .transform((links) =>
+      normalizeProfileLinks(
+        links.map((link) => ({
+          label: (link.label ?? "").trim(),
+          url: (link.url ?? "").trim(),
+        }))
+      )
+    ),
   extractionConfidence: z.number().min(0).max(1).nullable().optional(),
 });
+
+export function parseCandidateExtraction(raw: unknown): CandidateExtraction {
+  return candidateExtractionSchema.parse(raw);
+}
 
 export type CandidateExtraction = z.infer<typeof candidateExtractionSchema>;
 
