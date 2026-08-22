@@ -79,7 +79,11 @@ See [Environment variables](#environment-variables) below. Never commit `.env`.
 
 ### 3. Database
 
-Run Supabase migrations in order (SQL Editor or CLI):
+Run Supabase migrations in order (SQL Editor or CLI). Apply every file in `supabase/migrations/` chronologically. Key additions:
+
+- `20260821200000_admin_performance.sql` — job list indexes, `update_job_with_scoring`, `save_admin_decision`, batch application counts
+
+Legacy numbered list (partial):
 
 1. `supabase/migrations/20260820000000_initial_schema.sql`
 2. `supabase/migrations/20260820100000_auth_rls.sql`

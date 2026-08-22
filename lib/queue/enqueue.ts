@@ -70,6 +70,17 @@ async function enqueueViaRedis(applicationId: string): Promise<void> {
   }
 }
 
+function isLocalWorkerUrl(url: string): boolean {
+  return /localhost|127\.0\.0\.1/i.test(url);
+}
+
+/** Local Next.js should call the local worker directly, not shared cloud Redis. */
+function shouldPreferLocalHttpWorker(): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  const url = process.env.RAILWAY_WORKER_URL?.trim() ?? "";
+  return url.length > 0 && isLocalWorkerUrl(url);
+}
+
 export async function enqueueApplicationProcessing(
   applicationId: string
 ): Promise<void> {
@@ -78,6 +89,18 @@ export async function enqueueApplicationProcessing(
       "REDIS_URL is required in production on Vercel (Next.js app), not only on the Railway worker. " +
         "Add the same Redis connection URL to Vercel → Settings → Environment Variables, then redeploy."
     );
+  }
+
+  if (shouldPreferLocalHttpWorker()) {
+    try {
+      await enqueueViaHttp(applicationId);
+      return;
+    } catch (error) {
+      console.warn(
+        `[queue] Local HTTP worker failed for ${applicationId} — trying Redis`,
+        error instanceof Error ? error.message : error
+      );
+    }
   }
 
   if (isRedisQueueEnabled()) {

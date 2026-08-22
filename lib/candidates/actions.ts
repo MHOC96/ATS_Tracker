@@ -44,24 +44,15 @@ export async function saveAdminDecision(
     const { applicationId, status, notes } = parsed.data;
     const decision = applicationStatusToAdminDecision[status];
 
-    const { error: decisionError } = await supabase.from("admin_decisions").insert({
-      candidate_application_id: applicationId,
-      reviewer_id: user.id,
-      decision,
-      notes: notes?.trim() || null,
+    const { error: rpcError } = await supabase.rpc("save_admin_decision", {
+      p_application_id: applicationId,
+      p_status: status,
+      p_decision: decision,
+      p_notes: notes?.trim() || null,
     });
 
-    if (decisionError) {
-      return { success: false, error: decisionError.message };
-    }
-
-    const { error: statusError } = await supabase
-      .from("candidate_applications")
-      .update({ status })
-      .eq("id", applicationId);
-
-    if (statusError) {
-      return { success: false, error: statusError.message };
+    if (rpcError) {
+      return { success: false, error: rpcError.message };
     }
 
     revalidatePath("/admin/candidates");

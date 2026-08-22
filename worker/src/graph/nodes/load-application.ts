@@ -40,15 +40,25 @@ export async function loadApplication(
     };
   }
 
-  await supabase
+  const { data: existingJob } = await supabase
     .from("ai_processing_jobs")
-    .update({
-      status: "PROCESSING",
-      started_at: new Date().toISOString(),
-      attempts: 1,
-    })
+    .select("id, attempts")
     .eq("candidate_application_id", state.applicationId)
-    .eq("status", "QUEUED");
+    .eq("job_type", "CV_SCREENING")
+    .maybeSingle();
+
+  if (existingJob) {
+    await supabase
+      .from("ai_processing_jobs")
+      .update({
+        status: "PROCESSING",
+        started_at: new Date().toISOString(),
+        error_message: null,
+        completed_at: null,
+        attempts: (existingJob.attempts ?? 0) + 1,
+      })
+      .eq("id", existingJob.id);
+  }
 
   await supabase
     .from("candidate_applications")

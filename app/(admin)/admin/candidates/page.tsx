@@ -4,8 +4,10 @@ import { listCandidateApplications } from "@/lib/candidates/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 
 export default async function CandidatesPage() {
-  const user = await requireSessionUser();
-  const applications = await listCandidateApplications();
+  const [user, applications] = await Promise.all([
+    requireSessionUser(),
+    listCandidateApplications(),
+  ]);
 
   return (
     <div className="space-y-8">

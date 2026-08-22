@@ -8,7 +8,7 @@ import "./load-env.js";
 import { createServer } from "http";
 import { z } from "zod";
 import { workerConfig } from "./config.js";
-import { getGeminiApiKeyCount, getGeminiKeyFormat } from "./ai/gemini-keys.js";
+import { getGeminiApiKeyCount, getGeminiKeyFormat, resetGeminiApiKeyIndex } from "./ai/gemini-keys.js";
 import { DEFAULT_VISION_MODEL } from "./models.js";
 import { withWorkerConcurrency } from "./concurrency.js";
 import { completeCvUploadToDrive } from "./jobs/complete-cv-upload.js";
@@ -38,6 +38,17 @@ function isAuthorized(req: import("http").IncomingMessage): boolean {
   }
   const auth = req.headers.authorization;
   return auth === `Bearer ${WORKER_SECRET}`;
+}
+
+function isLocalWorkerUrl(url: string): boolean {
+  return /localhost|127\.0\.0\.1/i.test(url);
+}
+
+function shouldSkipBullmqConsumerInDev(): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  if (process.env.WORKER_BULLMQ_CONSUMER === "false") return true;
+  const url = process.env.RAILWAY_WORKER_URL?.trim() ?? "";
+  return url.length > 0 && isLocalWorkerUrl(url);
 }
 
 async function processApplication(applicationId: string): Promise<void> {
@@ -139,7 +150,14 @@ const server = createServer(async (req, res) => {
   res.end("Not Found");
 });
 
-startCvScreeningWorker();
+if (shouldSkipBullmqConsumerInDev()) {
+  console.log(
+    "[worker] BullMQ consumer skipped in local dev — Next.js uses HTTP /process to this worker"
+  );
+} else {
+  startCvScreeningWorker();
+}
+resetGeminiApiKeyIndex();
 
 server.listen(PORT, () => {
   console.log(`[worker] ATS AI worker listening on port ${PORT}`);
@@ -152,8 +170,16 @@ server.listen(PORT, () => {
     );
   }
   if (getGeminiKeyFormat() === "auth") {
+    console.log(
+      "[worker] Gemini auth keys (AQ.*) — current Google AI Studio default"
+    );
+  } else if (getGeminiKeyFormat() === "standard") {
     console.warn(
-      "[worker] Gemini keys look like auth tokens (AQ.*). Use a Google AI Studio API key (AIza…) in GEMINI_API_KEY if extraction fails."
+      "[worker] Legacy AIza traffic keys detected — migrate to AQ auth keys before Sep 2026"
+    );
+  } else if (getGeminiKeyFormat() === "unknown") {
+    console.warn(
+      "[worker] Gemini key format not recognized (expected AQ.* or AIza…)"
     );
   }
   if (getGeminiApiKeyCount() === 0) {

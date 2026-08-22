@@ -2,7 +2,26 @@ import { extractCandidateFromCv } from "../../ai/gemini.js";
 import { prepareCvForExtraction } from "../../ai/cv-preprocess.js";
 import { downloadDriveFile } from "../../google/drive.js";
 import { assertGeminiConfigured } from "../../config.js";
+import { pipelineStep } from "../../pipeline-log.js";
 import type { RecruitmentState } from "../state.js";
+
+function formatExtractionError(error: unknown): string {
+  if (error instanceof Error) {
+    const raw = error.message.trim();
+    if (raw.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(raw) as {
+          error?: { message?: string };
+        };
+        if (parsed.error?.message) return parsed.error.message;
+      } catch {
+        // ignore
+      }
+    }
+    return raw || "Gemini extraction failed";
+  }
+  return String(error ?? "Gemini extraction failed");
+}
 
 export async function extractCv(
   state: RecruitmentState
@@ -39,6 +58,14 @@ export async function extractCv(
     const { buffer, mimeType } = await downloadDriveFile(state.driveFileId);
     const prepared = await prepareCvForExtraction(buffer, mimeType);
 
+    pipelineStep(
+      state.applicationId,
+      "extractCv",
+      prepared.usedTextPath
+        ? `path=pdf_text (${prepared.extractedText?.length ?? 0} chars)`
+        : `path=vision (pages=${prepared.visionPageCount ?? "?"})`
+    );
+
     const result = await extractCandidateFromCv(
       prepared.buffer,
       prepared.mimeType,
@@ -62,8 +89,7 @@ export async function extractCv(
       },
     };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Gemini extraction failed";
+    const message = formatExtractionError(error);
     console.error("[graph] extractCv failed", state.applicationId, message);
     if (error instanceof Error && error.stack) {
       console.error(error.stack);
