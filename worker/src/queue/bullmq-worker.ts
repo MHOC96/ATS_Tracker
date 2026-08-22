@@ -53,6 +53,19 @@ export function startCvScreeningWorker(): Worker<CvScreeningJobData> | null {
     return null;
   }
 
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const host = parseRedisConnection(redisUrl).host;
+      if (host !== "localhost" && host !== "127.0.0.1") {
+        console.warn(
+          `[worker] REDIS_URL host is ${host} — another deployment may consume the same queue before this worker`
+        );
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
   if (worker) return worker;
 
   worker = new Worker<CvScreeningJobData>(

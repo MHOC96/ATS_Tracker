@@ -40,6 +40,17 @@ function isAuthorized(req: import("http").IncomingMessage): boolean {
   return auth === `Bearer ${WORKER_SECRET}`;
 }
 
+function isLocalWorkerUrl(url: string): boolean {
+  return /localhost|127\.0\.0\.1/i.test(url);
+}
+
+function shouldSkipBullmqConsumerInDev(): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  if (process.env.WORKER_BULLMQ_CONSUMER === "false") return true;
+  const url = process.env.RAILWAY_WORKER_URL?.trim() ?? "";
+  return url.length > 0 && isLocalWorkerUrl(url);
+}
+
 async function processApplication(applicationId: string): Promise<void> {
   pipelineJobStart(applicationId, "http");
 
@@ -139,7 +150,13 @@ const server = createServer(async (req, res) => {
   res.end("Not Found");
 });
 
-startCvScreeningWorker();
+if (shouldSkipBullmqConsumerInDev()) {
+  console.log(
+    "[worker] BullMQ consumer skipped in local dev — Next.js uses HTTP /process to this worker"
+  );
+} else {
+  startCvScreeningWorker();
+}
 resetGeminiApiKeyIndex();
 
 server.listen(PORT, () => {
