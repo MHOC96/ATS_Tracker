@@ -4,6 +4,7 @@ import { ApplicationDeleteButton } from "@/components/candidates/application-del
 import { ApplicationPipelineBadges } from "@/components/candidates/application-status-badge";
 import { CandidateEditForm } from "@/components/candidates/candidate-edit-form";
 import { DecisionForm } from "@/components/candidates/decision-form";
+import { InterviewInviteModal } from "@/components/candidates/interview-invite-modal";
 import { ScoreSummary } from "@/components/candidates/score-summary";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -51,11 +52,22 @@ export default async function CandidateDetailPage({
             {new Date(application.appliedAt).toLocaleDateString()}
           </p>
         </div>
-        <ApplicationPipelineBadges
-          status={application.status}
-          hasAiScore={application.score !== null}
-          className="mx-auto w-full sm:ml-auto sm:mr-0 sm:max-w-[18rem]"
-        />
+        <div className="flex w-full flex-col items-stretch gap-3 sm:ml-auto sm:w-auto sm:items-end">
+          <ApplicationPipelineBadges
+            status={application.status}
+            hasAiScore={application.score !== null}
+            className="w-full sm:max-w-[18rem]"
+          />
+          {canDecide && (
+            <InterviewInviteModal
+              applicationId={application.id}
+              candidateName={application.candidate.fullName ?? "Candidate"}
+              candidateEmail={application.candidate.email}
+              jobTitle={application.job.title}
+              canDecide={canDecide}
+            />
+          )}
+        </div>
       </div>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_min(100%,28rem)]">
