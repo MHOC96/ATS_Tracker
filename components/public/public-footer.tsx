@@ -1,15 +1,9 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import {
-  PUBLIC_APP_NAME,
-  PUBLIC_APP_TAGLINE,
-} from "@/lib/constants/branding";
 
 const footerLinks = [
   { href: "/", label: "Home" },
   { href: "/jobs", label: "Open roles" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/terms", label: "Terms" },
 ] as const;
 
 export function PublicFooter() {
@@ -24,10 +18,10 @@ export function PublicFooter() {
               href="/"
               className="inline-block text-[15px] font-[510] tracking-[-0.011em] text-paper transition-colors hover:text-mist"
             >
-              {PUBLIC_APP_NAME}
+              Careers
             </Link>
             <p className="mt-1 text-[13px] text-fog">
-              {PUBLIC_APP_TAGLINE}
+              Find your next role and apply online.
             </p>
           </div>
 
