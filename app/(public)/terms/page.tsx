@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageTitle } from "@/components/layout/page-title";
+import { PUBLIC_APP_NAME } from "@/lib/constants/branding";
 import { LegalProse, LegalSection } from "@/components/public/legal-prose";
 import { SurfaceCard } from "@/components/neuro/surface-card";
 
@@ -31,8 +32,8 @@ export default function TermsOfServicePage() {
             <p>
               These Terms of Service (&quot;Terms&quot;) govern your access to
               the careers website and related recruitment services operated by
-              mhoc (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By
-              accessing or using the Service, you agree to these Terms.
+              mhoc (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) as {PUBLIC_APP_NAME}.
+              By accessing or using the Service, you agree to these Terms.
             </p>
           </LegalSection>
 

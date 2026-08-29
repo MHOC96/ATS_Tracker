@@ -20,6 +20,13 @@ export const metadata: Metadata = {
     template: "%s — Recruitment Admin",
   },
   description: "Manage jobs, candidates, and hiring workflows.",
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
 };
 
 export const viewport = {

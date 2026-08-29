@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PUBLIC_APP_NAME } from "@/lib/constants/branding";
 
 type CareersHeroProps = {
   openRolesCount: number;
@@ -33,6 +34,9 @@ export function CareersHero({ openRolesCount }: CareersHeroProps) {
             </span>
 
             <div className="space-y-2.5">
+              <p className="text-[13px] font-[510] uppercase tracking-[0.06em] text-mist sm:text-[14px]">
+                {PUBLIC_APP_NAME}
+              </p>
               <h1
                 id="careers-hero-title"
                 className="text-balance font-[510] leading-[1.1] tracking-[-0.022em] text-paper [font-size:clamp(1.75rem,4vw+0.5rem,2.625rem)]"
