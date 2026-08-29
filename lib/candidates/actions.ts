@@ -9,6 +9,10 @@ import {
   recruiterOutcomeStatusSchema,
 } from "@/packages/shared/schemas";
 import {
+  getInterviewTypeLabel,
+  interviewTypeValueSchema,
+} from "@/packages/shared/schemas/interview";
+import {
   deleteApplicationSchema,
   updateCandidateSchema,
 } from "@/lib/validation/candidate-form";
@@ -20,6 +24,161 @@ const decisionSchema = z.object({
 });
 
 type DecisionResult = { success: true } | { success: false; error: string };
+
+const interviewInviteSchema = z.object({
+  applicationId: z.string().uuid(),
+  interviewType: interviewTypeValueSchema,
+  instructions: z.string().max(2000).optional(),
+});
+
+export async function sendInterviewInvite(
+  input: z.infer<typeof interviewInviteSchema>
+): Promise<DecisionResult> {
+  try {
+    const user = await requireSessionUser();
+
+    if (user.role === "REVIEWER") {
+      return { success: false, error: "Reviewers cannot send interview invites" };
+    }
+
+    const parsed = interviewInviteSchema.safeParse(input);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid interview invite",
+      };
+    }
+
+    const { applicationId, interviewType, instructions } = parsed.data;
+    const interviewTypeLabel = getInterviewTypeLabel(interviewType);
+
+    const supabase = await createClient();
+
+    const { data: application, error: fetchError } = await supabase
+      .from("candidate_applications")
+      .select(
+        `
+        id,
+        candidate:candidates (
+          full_name,
+          email
+        ),
+        job:jobs (
+          title
+        )
+      `
+      )
+      .eq("id", applicationId)
+      .single();
+
+    if (fetchError || !application) {
+      return { success: false, error: "Application not found" };
+    }
+
+    const candidate = Array.isArray(application.candidate)
+      ? application.candidate[0]
+      : application.candidate;
+    const job = Array.isArray(application.job) ? application.job[0] : application.job;
+
+    const candidateEmail = candidate?.email?.trim();
+    const candidateName = candidate?.full_name?.trim() || "Candidate";
+    const jobTitle = job?.title?.trim() || "the role";
+
+    if (!candidateEmail) {
+      return {
+        success: false,
+        error: "Candidate email is required before sending an interview invite",
+      };
+    }
+
+    const { buildCalComBookingUrl, resolveCalComBookingBaseUrl } = await import(
+      "@/lib/email/cal-com"
+    );
+    const { getGmailSmtpConfig } = await import("@/lib/email/gmail-smtp");
+
+    if (!getGmailSmtpConfig()) {
+      return {
+        success: false,
+        error:
+          "Gmail SMTP is not configured. Set GMAIL_SMTP_USER and GMAIL_SMTP_APP_PASSWORD in .env",
+      };
+    }
+
+    const calBaseUrl = await resolveCalComBookingBaseUrl();
+    if (!calBaseUrl) {
+      return {
+        success: false,
+        error:
+          "Cal.com booking URL is not configured. Set CALCOM_BOOKING_URL in .env",
+      };
+    }
+
+    const bookingUrl = buildCalComBookingUrl(calBaseUrl, {
+      name: candidateName,
+      email: candidateEmail,
+      notes: instructions,
+    });
+
+    const decisionNotes = [
+      `Interview invite sent: ${interviewTypeLabel}`,
+      instructions ? `Instructions: ${instructions.trim()}` : null,
+      `Booking link: ${bookingUrl}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const { error: rpcError } = await supabase.rpc("save_admin_decision", {
+      p_application_id: applicationId,
+      p_status: "INTERVIEW",
+      p_decision: applicationStatusToAdminDecision.INTERVIEW,
+      p_notes: decisionNotes,
+    });
+
+    if (rpcError) {
+      return { success: false, error: rpcError.message };
+    }
+
+    const { sendInterviewInviteEmail } = await import(
+      "@/lib/email/send-interview-invite"
+    );
+
+    try {
+      await sendInterviewInviteEmail({
+        to: candidateEmail,
+        candidateName,
+        jobTitle,
+        interviewTypeLabel,
+        instructions,
+        bookingUrl,
+        companyName: process.env.INTERVIEW_FROM_NAME?.trim(),
+      });
+    } catch (emailError) {
+      revalidatePath("/admin/candidates");
+      revalidatePath(`/admin/candidates/${applicationId}`);
+      revalidatePath("/admin/manual-review");
+
+      const message =
+        emailError instanceof Error ? emailError.message : "Email send failed";
+      return {
+        success: false,
+        error: `Candidate marked for interview, but email failed: ${message}`,
+      };
+    }
+
+    revalidatePath("/admin/candidates");
+    revalidatePath(`/admin/candidates/${applicationId}`);
+    revalidatePath("/admin/manual-review");
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to send interview invite",
+    };
+  }
+}
 
 export async function saveAdminDecision(
   input: z.infer<typeof decisionSchema>

@@ -33,6 +33,12 @@ export type {
   RecruiterOutcomeStatus,
   ScreeningApplicationStatus,
 } from "./application-status";
+export {
+  getInterviewTypeLabel,
+  interviewTypeOptions,
+  interviewTypeValueSchema,
+} from "./interview";
+export type { InterviewTypeValue } from "./interview";
 
 export const userRoleSchema = z.enum(["ADMIN", "RECRUITER", "REVIEWER"]);
 
