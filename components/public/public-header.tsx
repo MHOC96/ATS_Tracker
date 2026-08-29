@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { PUBLIC_APP_NAME } from "@/lib/constants/branding";
 
 export function PublicHeader() {
   return (
@@ -11,7 +12,7 @@ export function PublicHeader() {
           className="inline-flex min-h-10 min-w-0 flex-col justify-center gap-0.5 sm:min-h-11"
         >
           <span className="text-[15px] font-[510] tracking-[-0.011em] text-paper sm:text-[16px]">
-            Careers
+            {PUBLIC_APP_NAME}
           </span>
           <span className="hidden text-[11px] text-fog sm:block">Join our team</span>
         </Link>

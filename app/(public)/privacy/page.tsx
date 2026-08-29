@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageTitle } from "@/components/layout/page-title";
+import { PUBLIC_APP_NAME } from "@/lib/constants/branding";
 import { LegalProse, LegalSection } from "@/components/public/legal-prose";
 import { SurfaceCard } from "@/components/neuro/surface-card";
 
@@ -22,7 +23,7 @@ export default function PrivacyPolicyPage() {
     <div className="min-w-0 mx-auto max-w-3xl space-y-6 sm:space-y-8">
       <PageTitle
         title="Privacy Policy"
-        description={`Last updated: ${lastUpdated}. This policy describes how mhoc operates the careers site and recruitment platform.`}
+        description={`Last updated: ${lastUpdated}. This policy describes how mhoc operates ${PUBLIC_APP_NAME}.`}
       />
 
       <SurfaceCard padding="lg">
@@ -30,10 +31,10 @@ export default function PrivacyPolicyPage() {
           <LegalSection title="1. Who we are">
             <p>
               This careers site and recruitment administration platform
-              (&quot;Service&quot;) is operated by mhoc. The public careers pages
-              let candidates browse job openings and submit applications. An
-              internal admin area is used by authorized recruiters and
-              administrators to manage hiring.
+              (&quot;Service&quot;) is operated by mhoc as {PUBLIC_APP_NAME}. The
+              public careers pages let candidates browse job openings and submit
+              applications. An internal admin area is used by authorized
+              recruiters and administrators to manage hiring.
             </p>
           </LegalSection>
 

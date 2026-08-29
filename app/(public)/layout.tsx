@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { PublicFooter } from "@/components/public/public-footer";
 import { PublicHeader } from "@/components/public/public-header";
+import { PUBLIC_APP_NAME } from "@/lib/constants/branding";
 
 export const metadata: Metadata = {
   title: {
-    default: "Careers",
-    template: "%s — Careers",
+    default: PUBLIC_APP_NAME,
+    template: `%s — ${PUBLIC_APP_NAME}`,
   },
   description: "Browse open positions and apply online.",
 };
