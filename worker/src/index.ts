@@ -12,6 +12,7 @@ import { getGeminiApiKeyCount, getGeminiKeyFormat, resetGeminiApiKeyIndex } from
 import { DEFAULT_VISION_MODEL } from "./models.js";
 import { withWorkerConcurrency } from "./concurrency.js";
 import { completeCvUploadToDrive } from "./jobs/complete-cv-upload.js";
+import { getGoogleRefreshToken } from "./google/oauth.js";
 import { runRecruitmentWorkflow } from "./graph/workflow.js";
 import { startCvScreeningWorker } from "./queue/bullmq-worker.js";
 import { pipelineJobEnd, pipelineJobStart, pipelineStep } from "./pipeline-log.js";
@@ -185,5 +186,23 @@ server.listen(PORT, () => {
   if (getGeminiApiKeyCount() === 0) {
     console.error("[worker] No Gemini API keys configured — CV extraction will fail");
   }
+  void getGoogleRefreshToken()
+    .then(async (token) => {
+      if (!token) {
+        console.warn(
+          "[worker] Google Drive refresh token missing — CV uploads will fail until Admin → Settings → Connect"
+        );
+        return;
+      }
+      const { getAuthorizedOAuth2Client } = await import("./google/oauth.js");
+      await getAuthorizedOAuth2Client();
+      console.log("[worker] Google Drive OAuth token refresh OK");
+    })
+    .catch((error) => {
+      console.error(
+        "[worker] Google Drive OAuth check failed:",
+        error instanceof Error ? error.message : error
+      );
+    });
   console.log("[worker] LangGraph workflow ready (Gemini + Groq)");
 });
