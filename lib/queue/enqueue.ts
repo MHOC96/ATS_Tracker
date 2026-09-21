@@ -96,9 +96,12 @@ export async function enqueueApplicationProcessing(
       await enqueueViaHttp(applicationId);
       return;
     } catch (error) {
-      console.warn(
-        `[queue] Local HTTP worker failed for ${applicationId} — trying Redis`,
-        error instanceof Error ? error.message : error
+      const message =
+        error instanceof Error ? error.message : String(error ?? "unknown");
+      throw new Error(
+        `Local worker handoff failed (${message}). Start the worker with \`cd worker && npm run dev\` ` +
+          "and ensure RAILWAY_WORKER_URL=http://localhost:3001. " +
+          "Do not route local uploads to shared Redis — a remote worker may lack your Google Drive OAuth token."
       );
     }
   }

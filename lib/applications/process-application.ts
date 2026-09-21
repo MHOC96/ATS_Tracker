@@ -57,9 +57,10 @@ async function markUploadFailed(
   applicationId: string,
   message: string
 ): Promise<void> {
+  // Queue/start failures are not unreadable CVs — keep out of manual review.
   await supabase
     .from("candidate_applications")
-    .update({ status: "MANUAL_REVIEW" })
+    .update({ status: "APPLIED" })
     .eq("id", applicationId);
 
   await supabase

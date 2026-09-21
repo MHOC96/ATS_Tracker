@@ -100,6 +100,35 @@ export function isGeminiRateLimitError(error: unknown): boolean {
   );
 }
 
+/** Overload / capacity / gateway errors — safe to retry with backoff. */
+export function isGeminiTransientError(error: unknown): boolean {
+  if (isGeminiRateLimitError(error)) return true;
+
+  const lower = collectErrorText(error);
+  return (
+    lower.includes("503") ||
+    lower.includes("502") ||
+    lower.includes("500") ||
+    lower.includes("504") ||
+    lower.includes("408") ||
+    lower.includes("unavailable") ||
+    lower.includes("high demand") ||
+    lower.includes("overloaded") ||
+    lower.includes("internal error") ||
+    lower.includes("deadline exceeded") ||
+    lower.includes("temporarily")
+  );
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function transientRetriesPerKey(): number {
+  const n = Number(process.env.GEMINI_TRANSIENT_RETRIES ?? 4);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 4;
+}
+
 /** Invalid/expired key, OAuth token passed as API key, etc. */
 export function isGeminiAuthError(error: unknown): boolean {
   const lower = collectErrorText(error);
@@ -127,34 +156,54 @@ export async function withGeminiKeyRotation<T>(
   let lastError: unknown;
   const startIndex = currentIndex;
 
+  const maxTransientPerKey = transientRetriesPerKey();
+
   for (let attempt = 0; attempt < apiKeys.length; attempt++) {
     const keyIndex = (startIndex + attempt) % apiKeys.length;
     currentIndex = keyIndex;
 
     const { GoogleGenAI } = await import("@google/genai");
     const client = new GoogleGenAI({ apiKey: apiKeys[keyIndex] });
+    const keyLabel = `${keyIndex + 1}/${apiKeys.length}`;
 
-    try {
-      return await operation(client);
-    } catch (error) {
-      lastError = error;
-      const isLastKey = attempt === apiKeys.length - 1;
-      const keyLabel = `${keyIndex + 1}/${apiKeys.length}`;
+    for (let transientAttempt = 0; transientAttempt < maxTransientPerKey; transientAttempt++) {
+      try {
+        return await operation(client);
+      } catch (error) {
+        lastError = error;
+        const isLastKey = attempt === apiKeys.length - 1;
+        const isLastTransientAttempt = transientAttempt === maxTransientPerKey - 1;
 
-      if (isGeminiAuthError(error)) {
-        console.warn(
-          `[gemini] auth failure on key ${keyLabel}: ${errorMessage(error).slice(0, 200)}`
-        );
-        if (!isLastKey) continue;
-        resetGeminiApiKeyIndex();
-      } else if (isGeminiRateLimitError(error)) {
-        console.warn(`[gemini] rate limit on key ${keyLabel}`);
-        if (!isLastKey) continue;
-      } else {
+        if (isGeminiAuthError(error)) {
+          console.warn(
+            `[gemini] auth failure on key ${keyLabel}: ${errorMessage(error).slice(0, 200)}`
+          );
+          break;
+        }
+
+        if (isGeminiTransientError(error)) {
+          if (!isLastTransientAttempt) {
+            const delayMs = Math.min(1500 * 2 ** transientAttempt, 12_000);
+            console.warn(
+              `[gemini] transient error on key ${keyLabel} (attempt ${transientAttempt + 1}/${maxTransientPerKey}): ${errorMessage(error).slice(0, 160)} — retry in ${delayMs}ms`
+            );
+            await sleep(delayMs);
+            continue;
+          }
+
+          console.warn(
+            `[gemini] transient error exhausted on key ${keyLabel}${!isLastKey ? ", rotating key" : ""}`
+          );
+          if (!isLastKey) break;
+          continue;
+        }
+
         throw error;
       }
     }
   }
+
+  resetGeminiApiKeyIndex();
 
   throw lastError instanceof Error
     ? lastError

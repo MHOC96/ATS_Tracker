@@ -47,6 +47,16 @@ export async function getAuthorizedOAuth2Client() {
     scope: DRIVE_SCOPE,
   });
 
+  try {
+    await oauth2.getAccessToken();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Google OAuth token refresh failed";
+    throw new Error(
+      `${message}. Reconnect Google Drive in Admin → Settings (or update GOOGLE_OAUTH_REFRESH_TOKEN on the worker).`
+    );
+  }
+
   return oauth2;
 }
 

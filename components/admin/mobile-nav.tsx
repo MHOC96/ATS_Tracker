@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
@@ -20,6 +21,11 @@ type AdminMobileNavProps = {
 
 export function AdminMobileNav({ userRole }: AdminMobileNavProps) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const items =
     userRole === "ADMIN"
@@ -27,7 +33,7 @@ export function AdminMobileNav({ userRole }: AdminMobileNavProps) {
       : adminNavItems.filter((item) => item.href !== "/admin/settings");
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         className={cn(
           buttonVariants({ variant: "ghost", size: "icon" }),
@@ -54,6 +60,7 @@ export function AdminMobileNav({ userRole }: AdminMobileNavProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setOpen(false)}
                 className={cn(
                   "flex min-h-10 items-center gap-2.5 rounded-md px-3 py-2.5 text-[13px] transition-colors",
                   isActive
